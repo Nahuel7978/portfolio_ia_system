@@ -1,0 +1,19 @@
+spring:
+  app:
+    jwt:
+      secret: ${JWT_SECRET:asdhiaowhdna2nq312430r9ujfñ23ññ9856}
+  datasource:
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate # Crucial: Hibernate NO debe modificar el esquema, Flyway es el dueño
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
