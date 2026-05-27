@@ -10,6 +10,7 @@ public class KnowledgeEntryDTO {
     private String areaSecondary;
     private String status;
     private List<TechnologyRoleDTO> technologies = new ArrayList<>();
+    private boolean hasCoverImage;
 
     // Constructores, Getters y Setters
     public KnowledgeEntryDTO() {}
@@ -26,4 +27,8 @@ public class KnowledgeEntryDTO {
     public void setStatus(String status) { this.status = status; }
     public List<TechnologyRoleDTO> getTechnologies() { return technologies; }
     public void setTechnologies(List<TechnologyRoleDTO> technologies) { this.technologies = technologies; }
+
+	public boolean isHasCoverImage() {return hasCoverImage;}
+	public void setHasCoverImage(boolean hasCoverImage) {this.hasCoverImage = hasCoverImage;}
+
 }
