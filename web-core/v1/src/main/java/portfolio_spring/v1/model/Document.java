@@ -23,7 +23,6 @@ public class Document {
     @Column(name = "doc_type", nullable = false)
     private String docType;
 
-    // Carga perezosa estricta para evitar OutOfMemory
     @Lob
     @Basic(fetch = FetchType.LAZY)
     @JdbcTypeCode(java.sql.Types.BINARY)
@@ -46,4 +45,84 @@ public class Document {
     private String syncStatus = "PENDING"; // Estado por defecto
 
     // TODO: Generar Getters y Setters
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public KnowledgeEntry getEntry() {
+		return entry;
+	}
+
+	public void setEntry(KnowledgeEntry entry) {
+		this.entry = entry;
+	}
+
+	public String getDocumentName() {
+		return documentName;
+	}
+
+	public void setDocumentName(String documentName) {
+		this.documentName = documentName;
+	}
+
+	public String getDocType() {
+		return docType;
+	}
+
+	public void setDocType(String docType) {
+		this.docType = docType;
+	}
+
+	public byte[] getFileData() {
+		return fileData;
+	}
+
+	public void setFileData(byte[] fileData) {
+		this.fileData = fileData;
+	}
+
+	public String getMimeType() {
+		return mimeType;
+	}
+
+	public void setMimeType(String mimeType) {
+		this.mimeType = mimeType;
+	}
+
+	public Integer getTechnicalDepth() {
+		return technicalDepth;
+	}
+
+	public void setTechnicalDepth(Integer technicalDepth) {
+		this.technicalDepth = technicalDepth;
+	}
+
+	public String getLanguage() {
+		return language;
+	}
+
+	public void setLanguage(String language) {
+		this.language = language;
+	}
+
+	public Integer getImportance() {
+		return importance;
+	}
+
+	public void setImportance(Integer importance) {
+		this.importance = importance;
+	}
+
+	public String getSyncStatus() {
+		return syncStatus;
+	}
+
+	public void setSyncStatus(String syncStatus) {
+		this.syncStatus = syncStatus;
+	}
+
 }
