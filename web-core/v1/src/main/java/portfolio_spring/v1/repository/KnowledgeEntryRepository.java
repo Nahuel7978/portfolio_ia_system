@@ -12,4 +12,9 @@ public interface KnowledgeEntryRepository extends JpaRepository<KnowledgeEntry, 
     List<KnowledgeEntry> findAll();
 
     Optional<KnowledgeEntry> findById(int id);
+
+    List<KnowledgeEntry> findByAreaIn(List<String> areas);
+
+    // Para listar Proyectos
+    List<KnowledgeEntry> findByAreaNotIn(List<String> areas);
 }
