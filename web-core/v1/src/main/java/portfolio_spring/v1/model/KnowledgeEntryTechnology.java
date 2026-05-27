@@ -31,4 +31,5 @@ public class KnowledgeEntryTechnology {
     public void setTechnology(Technology technology) { this.technology = technology; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+	public void setEntry(KnowledgeEntry ke) { this.knowledgeEntry = ke; }
 }
