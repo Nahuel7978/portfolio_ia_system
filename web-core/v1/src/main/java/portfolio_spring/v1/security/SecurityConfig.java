@@ -29,7 +29,7 @@ public class SecurityConfig {
             .cors(cors -> cors.disable()) // Ajustaremos CORS más adelante para Angular
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**").permitAll() // Público para el login
+                .requestMatchers("/api/v1/public/**", "/api/v1/auth/**").permitAll() // Público para el login
                 .requestMatchers("/api/v1/admin/**").authenticated() // Protegido para el CMS
                 .anyRequest().permitAll() // Resto (portafolio público) permitido
             );
