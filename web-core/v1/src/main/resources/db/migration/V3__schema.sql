@@ -8,9 +8,11 @@ CREATE TABLE technologies (
 CREATE TABLE knowledge_entries (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    area VARCHAR(50) NOT NULL CHECK (area IN ('AI', 'ML', 'Robotics', 'NLP', 'Web', 'Programming', 'Computer Vision', 'Data Analytics', 'Education', 'Activity', 'Languages')),
-    area_secondary VARCHAR(50) CHECK (area_secondary IN ('AI', 'ML', 'Robotics', 'NLP', 'Web', 'Programming', 'Computer Vision', 'Data Analytics', 'Education', 'Activity', 'Languages')),
-    status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'completed'))
+    area VARCHAR(50) NOT NULL CHECK (area IN ('AI', 'ML', 'Robotics', 'NLP', 'Web', 'Programming', 'Computer Vision', 'Data Analytics', 'Education', 'Activity', 'Languages', 'Blog')),
+    area_secondary VARCHAR(50) CHECK (area_secondary IN ('AI', 'ML', 'Robotics', 'NLP', 'Web', 'Programming', 'Computer Vision', 'Data Analytics', 'Education', 'Activity', 'Languages', 'Blog')),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'completed')),
+    image_data BYTEA,
+    image_mime_type VARCHAR(100)
 );
 
 CREATE TABLE knowledge_entry_technologies (
