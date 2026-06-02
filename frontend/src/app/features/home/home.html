@@ -5,25 +5,27 @@
       
       <p class="text-[10px] md:text-xs uppercase tracking-[0.4em] text-neutral-400 mb-6">Portfolio</p>
       
-      <h1 class="font-serif-display text-6xl md:text-7xl lg:text-8xl font-light leading-tight mb-4 text-neutral-800">
+      <h1 class="font-serif-display text-6xl md:text-7xl lg:text-6xl font-light leading-tight mb-4 text-neutral-800">
         Ing. Román Nahuel
       </h1>
       
       <p class="text-base md:text-lg font-light text-neutral-500 mb-12 tracking-wide">
-        Software Engineer & Systems Architect
+        Software Engineer | Full Stack Developer | Tech Enthusiast
       </p>
       
       <div class="flex items-center justify-center gap-4">
-        <a class="bg-neutral-800 text-white text-sm px-8 py-3 rounded-full hover:bg-neutral-700 transition-colors">
+        <a routerLink="/" fragment="projects" class="bg-neutral-800 text-white text-sm px-8 py-3 rounded-full hover:bg-neutral-700 transition-colors cursor-pointer">
           View Work
         </a>
-        <a class="border border-neutral-300 text-neutral-800 text-sm px-8 py-3 rounded-full hover:border-neutral-800 transition-colors bg-transparent">
+        <a routerLink="/" fragment="contact" class="border border-neutral-300 text-neutral-800 text-sm px-8 py-3 rounded-full hover:border-neutral-800 transition-colors bg-transparent cursor-pointer">
           Get in Touch
         </a>
       </div>
 
     </div>
   </section>
+
+  <app-about></app-about>
 
   <app-projects></app-projects>
 

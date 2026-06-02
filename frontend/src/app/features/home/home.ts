@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ContactComponent } from '../contact/contact';
 import { ProjectsComponent } from '../projects/projects';
 import { BlogsComponent } from '../blogs/blogs';
+import { AboutComponent } from "../about/about";
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, ContactComponent, ProjectsComponent, BlogsComponent],
+  imports: [CommonModule, ContactComponent, ProjectsComponent, BlogsComponent, AboutComponent],
   templateUrl: './home.html'
 })
 export class HomeComponent {
