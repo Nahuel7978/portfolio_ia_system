@@ -1,0 +1,21 @@
+<nav class="fixed top-0 left-0 w-full z-50 bg-stone-50/90 backdrop-blur-md border-b border-neutral-200/50">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a routerLink="/" class="font-serif-display text-2xl font-semibold tracking-tight">R.N.</a>
+      
+      <div class="hidden md:flex items-center gap-8">
+        <a routerLink="/" class="text-sm font-light tracking-wide uppercase hover:text-neutral-500 transition-colors">Home</a>
+        <a routerLink="/#about" class="text-sm font-light tracking-wide uppercase hover:text-neutral-500 transition-colors">About</a>
+        <a routerLink="/#projects" class="text-sm font-light tracking-wide uppercase hover:text-neutral-500 transition-colors">Projects</a>
+        <a routerLink="/#blogs" class="text-sm font-light tracking-wide uppercase hover:text-neutral-500 transition-colors">Blogs</a>
+        <a routerLink="/#contact" class="text-sm font-light tracking-wide uppercase hover:text-neutral-500 transition-colors">Contact</a>
+      </div>
+  
+      <div class="flex items-center">
+        <button class="text-sm font-light border border-neutral-300 px-6 py-1.5 rounded-full hover:bg-neutral-800 hover:text-white hover:border-neutral-800 transition-all duration-300">
+          Login
+        </button>
+      </div>
+    </div>
+  </nav>
+  
+  <router-outlet></router-outlet>
