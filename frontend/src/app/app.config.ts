@@ -1,5 +1,5 @@
 import { ApplicationConfig, importProvidersFrom } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
@@ -15,6 +15,15 @@ export const appConfig: ApplicationConfig = {
       withFetch(), 
       withInterceptors([errorInterceptor])
     ),
-    provideMarkdown()
+    provideMarkdown(),
+    provideRouter(
+      routes, 
+      withComponentInputBinding(),
+      // ESTO ACTIVA EL SCROLL AUTOMÁTICO EN ANGULAR
+      withInMemoryScrolling({
+        anchorScrolling: 'enabled',
+        scrollPositionRestoration: 'enabled'
+      })
+    ),
   ]
 };
