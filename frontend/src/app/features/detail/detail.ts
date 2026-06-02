@@ -27,6 +27,8 @@ export class DetailComponent implements OnInit {
   entry: any = null;
   apiUrl = environment.apiUrl;
   isLoading = true;
+  hasCover: Boolean = false;
+  entryId: Number | null = null;
 
   readonly ArrowLeft = ArrowLeft;
   readonly Code2 = Code2;
@@ -34,15 +36,16 @@ export class DetailComponent implements OnInit {
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      const id = Number(params.get('id'));
-      if (id) {
+      this.entryId = Number(params.get('id'));
+      if (this.entryId) {
         this.isLoading = true;
         this.entry = null; // Limpiar datos anteriores
         this.cdr.detectChanges(); // Forzar dibujado de "Loading..."
 
-        this.entryService.getEntryById(id).subscribe({
+        this.entryService.getEntryById(this.entryId).subscribe({
           next: (data) => {
             this.entry = data;
+            this.hasCover = Boolean(this.entry.entry.hasCoverImage);
             this.isLoading = false;
             this.updateSeoTags();
             
