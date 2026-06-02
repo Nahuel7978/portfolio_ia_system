@@ -17,7 +17,7 @@ export class KnowledgeEntryService {
     return this.http.get<KnowledgeEntryDTO[]>(`${this.apiUrl}/blogs`);
   }
 
-  getEntryById(id: number): Observable<any> {
+  getEntryById(id: Number): Observable<any> {
     // Retorna el PublicEntryDetailDTO que definimos en el backend
     return this.http.get<any>(`${this.apiUrl}/${id}`);
   }
