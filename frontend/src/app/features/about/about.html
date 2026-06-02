@@ -1,0 +1,31 @@
+<section id="about" class="py-24 px-6 bg-white border-t border-neutral-100">
+  <div class="max-w-5xl mx-auto section-reveal">
+    <p class="text-xs uppercase tracking-[0.3em] text-neutral-400 mb-2">About</p>
+    <h2 class="font-serif-display text-4xl md:text-5xl font-light mb-12">A brief introduction</h2>
+
+    <div class="grid md:grid-cols-2 gap-12">
+      <div>
+        @if (aboutText) {
+          <p class="text-neutral-600 font-light leading-relaxed whitespace-pre-wrap">{{ aboutText }}</p>
+        } @else {
+          <p class="text-neutral-400 font-light italic">Loading profile...</p>
+        }
+      </div>
+
+      <div>
+        <h3 class="text-sm uppercase tracking-wider text-neutral-400 mb-6">Latest Technologies</h3>
+        
+        @if (technologies.length > 0) {
+          <ul class="space-y-3">
+            @for (tech of technologies; track tech) {
+              <li class="flex items-center gap-3 text-neutral-600 font-light">
+                <lucide-icon [img]="CheckCircle2" class="w-4 h-4 text-neutral-400"></lucide-icon>
+                {{ tech }}
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  </div>
+</section>
