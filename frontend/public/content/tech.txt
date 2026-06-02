@@ -1,0 +1,5 @@
+Angular 18 & TypeScript
+Spring Boot & Java
+PostgreSQL & Redis
+FastAPI & Python
+Docker & CI/CD
