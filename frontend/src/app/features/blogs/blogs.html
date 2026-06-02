@@ -1,0 +1,55 @@
+<section id="blogs" class="py-24 px-6 border-t border-neutral-100 bg-white">
+    <div #sectionTarget class="max-w-6xl mx-auto section-reveal" [class.visible]="isVisible">
+      <p class="text-xs uppercase tracking-[0.3em] text-neutral-400 mb-2">Latest Articles</p>
+      <h2 class="font-serif-display text-4xl md:text-5xl font-light mb-12">Selected blogs</h2>
+      
+      <div class="relative group">
+        <div #carouselContainer class="carousel-container flex gap-6 pb-4 overflow-x-auto snap-x snap-mandatory hide-scrollbar">
+          
+          @for (blog of blogs; track blog.id) {
+            <div [routerLink]="['/entry', blog.id]" class="snap-start shrink-0 w-80 md:w-96 card-hover bg-white rounded-2xl border border-neutral-100 overflow-hidden cursor-pointer">
+              
+              @if (blog.hasCoverImage) {
+                <div class="h-40 w-full bg-neutral-100">
+                  <img [src]="apiUrl + '/public/knowledge-entries/' + blog.id + '/image'" 
+                       [alt]="blog.name" 
+                       class="w-full h-full object-cover">
+                </div>
+              } @else {
+                <div class="h-40 bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center">
+                  <lucide-icon [img]="FileText" class="w-10 h-10 text-neutral-300"></lucide-icon>
+                </div>
+              }
+  
+              <div class="p-6">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xs text-neutral-400">{{ blog.area }}</span>
+                </div>
+                <h3 class="font-medium mb-2">{{ blog.name }}</h3>
+                <p class="text-sm text-neutral-500 font-light leading-relaxed">Status: {{ blog.status }}</p>
+                
+                @if (blog.technologies?.length) {
+                  <div class="flex flex-wrap gap-2 mt-4">
+                    @for (tech of blog.technologies; track tech.technologyId) {
+                      <span class="text-xs bg-neutral-100 px-2 py-0.5 rounded text-neutral-600">{{ tech.name }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+          
+          @if (blogs.length === 0) {
+            <p class="text-neutral-500 font-light">No blogs available yet.</p>
+          }
+        </div>
+  
+        <button (click)="scroll(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white shadow-lg rounded-full p-2 hover:bg-neutral-800 hover:text-white transition hidden md:block z-10">
+          <lucide-icon [img]="ChevronLeft" class="w-4 h-4"></lucide-icon>
+        </button>
+        <button (click)="scroll(1)" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white shadow-lg rounded-full p-2 hover:bg-neutral-800 hover:text-white transition hidden md:block z-10">
+          <lucide-icon [img]="ChevronRight" class="w-4 h-4"></lucide-icon>
+        </button>
+      </div>
+    </div>
+  </section>
