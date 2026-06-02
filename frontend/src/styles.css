@@ -1,0 +1,53 @@
+/* Inyección de Tailwind v4 */
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+
+/* Configuración del Tema Personalizado */
+@theme {
+  --font-sans: 'Outfit', sans-serif;
+  --font-serif: 'Cormorant Garamond', serif;
+}
+
+/* Clases de Utilidad y Animaciones (De la Maqueta) */
+@layer utilities {
+  .font-serif-display {
+    font-family: 'Cormorant Garamond', serif;
+  }
+  
+  .section-reveal { 
+    opacity: 0; 
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
+  }
+  
+  .section-reveal.visible { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+
+  .hide-scrollbar { 
+    scrollbar-width: none; -ms-overflow-style: none; 
+  } 
+  
+  .hide-scrollbar::-webkit-scrollbar { 
+    display: none; 
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out; 
+  }
+}
+
+/* Reseteos base de la maqueta */
+html { 
+  scroll-behavior: smooth; 
+  height: 100%; 
+}
+
+body { 
+  height: 100%; 
+  overflow-y: auto; 
+  background-color: #fafaf9; /* bg-stone-50 */
+  color: #262626; /* text-neutral-800 */
+}
