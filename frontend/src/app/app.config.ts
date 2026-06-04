@@ -5,6 +5,7 @@ import { provideClientHydration } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { errorInterceptor } from './core/interceptors/error-interceptor';
 import { provideMarkdown } from 'ngx-markdown';
+import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
 
 
 export const appConfig: ApplicationConfig = {
@@ -13,7 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(),
     provideHttpClient(
       withFetch(), 
-      withInterceptors([errorInterceptor])
+      withInterceptors([errorInterceptor,jwtInterceptor])
     ),
     provideMarkdown(),
     provideRouter(
