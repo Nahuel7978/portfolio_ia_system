@@ -1,0 +1,103 @@
+<div class="max-w-6xl mx-auto p-6 animate-fade-in">
+  
+    <div class="mb-8">
+      <h1 class="text-3xl font-serif text-stone-900">Tecnologías</h1>
+      <p class="text-stone-500 mt-2">Gestiona el catálogo de tecnologías para asignar a tus proyectos.</p>
+    </div>
+  
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <div class="lg:col-span-1">
+        <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm sticky top-6">
+          <h2 class="text-xl font-serif text-stone-800 mb-4">Nueva Tecnología</h2>
+          
+          <form [formGroup]="techForm" (ngSubmit)="onSubmit()" class="space-y-4">
+            
+            <div>
+              <label class="block text-sm font-medium text-stone-700 mb-1">Nombre</label>
+              <input 
+                type="text" 
+                formControlName="name"
+                placeholder="Ej. Angular, Python, Docker..."
+                class="w-full px-4 py-2 rounded-lg bg-stone-50 border border-stone-200 focus:outline-none focus:border-stone-800 transition-colors"
+                [class.border-red-500]="techForm.get('name')?.invalid && techForm.get('name')?.touched"
+              >
+            </div>
+  
+            <div>
+              <label class="block text-sm font-medium text-stone-700 mb-1">Categoría</label>
+              <select 
+                formControlName="category"
+                class="w-full px-4 py-2 rounded-lg bg-stone-50 border border-stone-200 focus:outline-none focus:border-stone-800 transition-colors appearance-none"
+                [class.border-red-500]="techForm.get('category')?.invalid && techForm.get('category')?.touched"
+              >
+                <option value="" disabled selected>Selecciona una categoría</option>
+                @for (cat of categories; track cat) {
+                  <option [value]="cat">{{ cat | titlecase }}</option>
+                }
+              </select>
+            </div>
+  
+            @if (errorMessage) {
+              <div class="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
+                {{ errorMessage }}
+              </div>
+            }
+            
+            @if (successMessage) {
+              <div class="p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-100">
+                {{ successMessage }}
+              </div>
+            }
+  
+            <button 
+              type="submit" 
+              [disabled]="techForm.invalid || isSubmitting"
+              class="w-full bg-stone-900 text-white py-2 px-4 rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ isSubmitting ? 'Guardando...' : 'Agregar Tecnología' }}
+            </button>
+          </form>
+        </div>
+      </div>
+  
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+          
+          @if (isLoading) {
+            <div class="p-8 text-center text-stone-500">
+              Cargando tecnologías...
+            </div>
+          } @else if (technologies.length === 0) {
+            <div class="p-8 text-center text-stone-500">
+              No hay tecnologías registradas.
+            </div>
+          } @else {
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-stone-50 border-b border-stone-200 text-sm font-medium text-stone-500">
+                  <th class="py-3 px-6">ID</th>
+                  <th class="py-3 px-6">Nombre</th>
+                  <th class="py-3 px-6">Categoría</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-stone-100">
+                @for (tech of technologies; track tech.id) {
+                  <tr class="hover:bg-stone-50 transition-colors">
+                    <td class="py-3 px-6 text-sm text-stone-500">#{{ tech.id }}</td>
+                    <td class="py-3 px-6 font-medium text-stone-800">{{ tech.name }}</td>
+                    <td class="py-3 px-6">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-stone-100 text-stone-800 border border-stone-200">
+                        {{ tech.category | titlecase }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      </div>
+  
+    </div>
+  </div>
