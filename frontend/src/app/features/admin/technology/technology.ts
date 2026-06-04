@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TechnologyService } from '../../../core/services/technology.service';
@@ -14,6 +14,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class TechnologiesComponent implements OnInit {
   private techService = inject(TechnologyService);
   private fb = inject(FormBuilder);
+  private cdr = inject(ChangeDetectorRef);
+
 
   technologies: Technology[] = [];
   isLoading = false;
@@ -42,12 +44,14 @@ export class TechnologiesComponent implements OnInit {
       next: (data) => {
         this.technologies = data;
         this.isLoading = false;
+        this.cdr.detectChanges(); 
       },
       error: () => {
         this.errorMessage = 'Error al cargar las tecnologías.';
         this.isLoading = false;
       }
     });
+    this.cdr.detectChanges();
   }
 
   onSubmit() {
@@ -66,6 +70,7 @@ export class TechnologiesComponent implements OnInit {
         this.successMessage = 'Tecnología agregada con éxito.';
         this.techForm.reset();
         this.isSubmitting = false;
+        this.cdr.detectChanges();
         setTimeout(() => this.successMessage = '', 3000);
       },
       error: (err: HttpErrorResponse) => {
