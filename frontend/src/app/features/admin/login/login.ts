@@ -55,9 +55,9 @@ export class LoginComponent {
       next: () => {
         this.isLoading = false;
         this.isSuccess = true;
-        this.router.navigate(['/admin/technologies']);
+        this.router.navigate(['/admin/knowledge-entries']);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: HttpErrorResponse) => { 
         this.isLoading = false;
         if (err.status === 401) {
           this.errorMessage = 'Usuario o Contraseña incorrectos. Inténtalo de nuevo.';
