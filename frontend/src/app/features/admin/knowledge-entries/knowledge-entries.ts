@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { AdminEntryService } from '../../../core/services/admin-entry.service';
 import { environment } from '../../../../environments/environment.development';
 import { Router, RouterLink } from  '@angular/router';
+import { TechnologiesComponent } from "../technology/technology";
 
 
 @Component({
   selector: 'app-knowledge-entries',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TechnologiesComponent],
   templateUrl: './knowledge-entries.html'
 })
 export class KnowledgeEntriesComponent implements OnInit {
@@ -16,7 +17,7 @@ export class KnowledgeEntriesComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
   
-  activeTab: 'projects' | 'blogs' = 'projects';
+  activeTab: 'projects' | 'blogs' | 'technologies' = 'projects';
   entries: any[] = [];
   isLoading = false;
   apiUrl = environment.apiUrl;
@@ -25,9 +26,11 @@ export class KnowledgeEntriesComponent implements OnInit {
     this.loadEntries();
   }
 
-  setTab(tab: 'projects' | 'blogs') {
+  setTab(tab: 'projects' | 'blogs' | 'technologies') {
     this.activeTab = tab;
-    this.loadEntries();
+    if (tab != 'technologies') {
+      this.loadEntries();  
+    }
   }
 
   loadEntries() {
