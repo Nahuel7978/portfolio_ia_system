@@ -28,7 +28,6 @@ export class AboutComponent implements OnInit {
       this.http.get('/content/about.txt', { responseType: 'text' }).subscribe({
         next: (text) => {
           this.aboutText = text;
-          console.log('Texto cargado:', this.aboutText);
           // Le avisamos a Angular que esta variable ya está lista para pintarse
           this.cdr.markForCheck(); 
         },
