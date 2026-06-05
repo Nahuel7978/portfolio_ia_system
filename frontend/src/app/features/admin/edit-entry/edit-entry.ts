@@ -63,15 +63,15 @@ export class EditEntryComponent implements OnInit {
     // 2. Cargar Datos de la Entrada (Asumiendo que tienes un método getEntryById)
     this.entryService.getEntryById(this.entryId).subscribe(entry => {
       this.entryForm.patchValue({
-        name: entry.name,
-        area: entry.area,
-        areaSecondary: entry.areaSecondary || '',
-        status: entry.status
+        name: entry.entry.name,
+        area: entry.entry.area,
+        areaSecondary: entry.entry.areaSecondary || '',
+        status: entry.entry.status
       });
-      this.cdr.detectChanges();
       this.entryName=String(entry.entry.name)
+      this.cdr.detectChanges();
 
-      if (entry.hasCoverImage) {
+      if (entry.entry.hasCoverImage) {
         // Usamos un query param aleatorio (cache-buster) para evitar que el navegador muestre una imagen vieja en caché
         this.currentImageUrl = `${environment.apiUrl}/public/knowledge-entries/${this.entryId}/image?t=${new Date().getTime()}`;
       }
@@ -180,13 +180,16 @@ export class EditEntryComponent implements OnInit {
 
     this.isSubmitting = true;
 
+    console.log('Formulario válido, preparando payload...', this.entryForm);
     // 1. Payload de texto
     const entryDTO = {
+      id: this.entryId,
       name: this.entryForm.value.name,
       area: this.entryForm.value.area,
       areaSecondary: this.entryForm.value.areaSecondary || null,
       status: this.entryForm.value.status,
-      technologies: this.selectedTechs.map(t => ({ technologyId: t.technologyId, role: t.role }))
+      technologies: this.selectedTechs.map(t => ({ technologyId: t.technologyId, role: t.role })),
+      hasCoverImage:this.entryForm.value.hasCoverImage
     };
 
     // FLUJO RXJS: PUT Entry -> PUT Image (opcional) -> DELETE Docs -> POST Docs
