@@ -1,0 +1,28 @@
+#Dependencias Core
+ragas
+deepeval 
+langchain-openai
+langchain
+langchain-community
+langchain-groq
+langchain-cohere
+langchain-chroma
+langchain-huggingface
+langchain-google-genai
+cohere
+unstructured[md]
+pypdf
+sentence-transformers
+chromadb
+sqlalchemy
+lark
+
+#Dependencias soporte
+python-frontmatter   # para leer/escribir el YAML frontmatter
+pydantic             # validación del esquema de metadatos
+
+
+#API
+fastapi
+uvicorn
+python-dotenv

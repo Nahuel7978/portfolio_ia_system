@@ -1,0 +1,29 @@
+[
+    {
+      "_case": "CASO 1 — Respuesta correcta. Esperás scores ALTOS en las 3 métricas.",
+      "question": "¿Qué tecnologías usaste en el proyecto Autonomous Robot?",
+      "answer": "En el proyecto Autonomous Robot utilicé Python y Webots para simular un robot con navegación autónoma basada en Q-learning y control neuroinspirado.",
+      "contexts": [
+        "Autonomous Robot (2024): Simulación de un robot con navegación autónoma basada en Q-learning y control neuroinspirado. Tecnologías: Python, Webots."
+      ],
+      "ground_truth": "Usé Python y Webots. El robot implementaba navegación autónoma con Q-learning y control neuroinspirado."
+    },
+    {
+      "_case": "CASO 2 — Respuesta con alucinación. Esperás Faithfulness BAJO (~0.3-0.5).",
+      "question": "¿En qué empresa hiciste tu pasantía y qué tecnologías usaste?",
+      "answer": "Realicé mi pasantía en NeuroAI Lab del INTIA, UNCPBA, donde trabajé con ROS2, TensorFlow y Kubernetes para desplegar modelos en producción.",
+      "contexts": [
+        "Pasante - NeuroAI Lab, INTIA, UNCPBA (Enero 2025 - Noviembre 2025). Rol: investigación aplicando Aprendizaje por Refuerzo, Robótica Simulada y Desarrollo Backend/Frontend."
+      ],
+      "ground_truth": "La pasantía fue en NeuroAI Lab, INTIA, UNCPBA. Las áreas fueron Aprendizaje por Refuerzo, Robótica Simulada y desarrollo web Backend/Frontend."
+    },
+    {
+      "_case": "CASO 3 — Contexto irrelevante. Esperás Context Recall BAJO (~0.0-0.3).",
+      "question": "¿Qué es VeriBot y qué tecnologías usaste?",
+      "answer": "VeriBot es un agente conversacional que responde preguntas sobre noticias analizando su veracidad y contexto.",
+      "contexts": [
+        "SellerBot (2025): Agente conversacional para vender productos y armar carritos utilizando tool que consumen una API especializada. Tecnologías: Gemini-2.5, FastAPI, Google Gen IA SDK, Python, Twilio, Railway."
+      ],
+      "ground_truth": "VeriBot es un agente conversacional para responder preguntas sobre noticias con veracidad y análisis contextual. Lideré el equipo. Tecnologías: GPT-4, Azure Bot Services, Java Spring Boot, Azure Container Apps."
+    }
+  ]

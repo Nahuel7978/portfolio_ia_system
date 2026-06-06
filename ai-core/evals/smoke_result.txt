@@ -1,0 +1,45 @@
+[1/4] Inicializando Gemini como LLM juez...
+/home/roman7978/Documentos/Trabajo/CV_Bot/evals/smoke_test.py:71: DeprecationWarning: LangchainLLMWrapper is deprecated and will be removed in a future version. Use llm_factory instead: from openai import OpenAI; from ragas.llms import llm_factory; llm = llm_factory('gpt-4o-mini', client=OpenAI(api_key='...'))
+  return LangchainLLMWrapper(llm), LangchainEmbeddingsWrapper(embeddings)
+/home/roman7978/Documentos/Trabajo/CV_Bot/evals/smoke_test.py:71: DeprecationWarning: LangchainEmbeddingsWrapper is deprecated and will be removed in a future version. Use the modern embedding providers instead: embedding_factory('openai', model='text-embedding-3-small', client=openai_client) or from ragas.embeddings import OpenAIEmbeddings, GoogleEmbeddings, HuggingFaceEmbeddings
+  return LangchainLLMWrapper(llm), LangchainEmbeddingsWrapper(embeddings)
+[2/4] Cargando smoke_data.json...
+      3 casos cargados correctamente.
+
+[3/4] Ejecutando evaluación...
+Evaluating:   0%|                                                                                                | 0/9 [00:00<?, ?it/s]LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
+Evaluating:  11%|█████████▊                                                                              | 1/9 [00:05<00:45,  5.70s/it]LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
+LLM returned 1 generations instead of requested 3. Proceeding with 1 generations.
+Evaluating: 100%|████████████████████████████████████████████████████████████████████████████████████████| 9/9 [01:04<00:00,  7.20s/it]
+      Completado en 67.0s
+
+[4/4] Resultados
+
+------------------------------------------------------------
+
+CASO 1: CASO 1 — Respuesta correcta. Esperás scores ALTOS en las 3 m...
+  ✅ faithfulness           1.000  (umbral: 0.85)  PASS
+  ✅ answer_relevancy       0.906  (umbral: 0.85)  PASS
+  ✅ context_recall         1.000  (umbral: 0.8)  PASS
+
+CASO 2: CASO 2 — Respuesta con alucinación. Esperás Faithfulness BAJ...
+  ❌ faithfulness           0.200  (umbral: 0.85)  FAIL
+  ✅ answer_relevancy       0.890  (umbral: 0.85)  PASS
+  ✅ context_recall         1.000  (umbral: 0.8)  PASS
+
+CASO 3: CASO 3 — Contexto irrelevante. Esperás Context Recall BAJO (...
+  ❌ faithfulness           0.000  (umbral: 0.85)  FAIL
+  ❌ answer_relevancy       0.813  (umbral: 0.85)  FAIL
+  ❌ context_recall         0.000  (umbral: 0.8)  FAIL
+
+============================================================
+RESUMEN GLOBAL
+------------------------------------------------------------
+  ❌ faithfulness           avg=0.400  umbral=0.85
+  ✅ answer_relevancy       avg=0.870  umbral=0.85
+  ❌ context_recall         avg=0.667  umbral=0.8
+------------------------------------------------------------
+  🟡 INFRAESTRUCTURA OK con advertencias.
+     Los FAILs en este smoke test son ESPERADOS (datos sintéticos).
+     Lo importante: el script corrió sin errores de configuración.
+============================================================
