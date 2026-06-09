@@ -25,8 +25,7 @@ from langchain_core.messages import HumanMessage
 from src.vector_load.vector_store import load_vector_store
 from langchain_core.documents import Document
 from typing import Any
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session
+from pathlib import Path
 
 # ── Configuración ─────────────────────────────────────────────────────────────
 load_dotenv()
@@ -52,7 +51,6 @@ VALID_AREAS = {
 
 GROQ_MODEL      = "llama-3.3-70b-versatile"
 COHERE_MODEL    = "rerank-multilingual-v3.0"  # Soporta español
-DB_URL = "sqlite:///./db_SQLite/knowledge.db"
                         
 #log.basicConfig(level=log.DEBUG)
 
@@ -73,301 +71,54 @@ def _get_query_llm() -> ChatGroq:
         api_key=api_key,
     )
     
-#-- Extracción de tecnología o area mencionada en la pregunta ─────────────────────────────────────────────    
+def load_prompt(filename: str) -> str:
+    """Lee un prompt desde un archivo físico en la carpeta agent/prompts."""
+    base_dir = Path(__file__).resolve().parent.parent / "agent" / "prompts"
+    prompt_path = base_dir / filename
+    with open(prompt_path, "r", encoding="utf-8") as f:
+        return f.read()
+
 def _extract_technology(query: str, llm: ChatGroq) -> str | None:
-    """
-    Usa el LLM para detectar si la pregunta menciona una tecnología específica.
-    Devuelve el nombre exacto de la tecnología o None si no hay ninguna.
-    """
-    prompt = f"""Tu tarea es detectar si la consulta del usuario menciona UNA tecnología específica.
-
-            DEFINICIÓN DE TECNOLOGÍA VÁLIDA:
-            Solo considera tecnologías de alguno de estos tipos:
-            - Lenguajes de programación
-            - Frameworks
-            - Librerías
-            - Herramientas de desarrollo
-            - Plataformas cloud
-            - Infraestructura
-            - Bases de datos
-            - APIs
-            - Algoritmos
-            - Modelos de IA/ML
-            - Protocolos
-            - Motores
-            - Tecnologías web
-
-            REGLAS:
-            1. Responde ÚNICAMENTE con:
-            - el nombre exacto de la tecnología en inglés
-            - o NONE
-            2. No agregues explicaciones, puntuación ni texto adicional.
-            3. Si aparecen múltiples tecnologías:
-                - responde la más relevante para la intención principal de la consulta
-                - si no existe una claramente principal, responde la primera tecnología explícitamente mencionada
-            4. Si la consulta es general y no menciona claramente una tecnología específica, responde: NONE
-            5. Usa inferencia semántica y reconoce variaciones de escritura.
-            6. La consulta puede venir en español, inglés o mezclando ambos idiomas.
-            7. La consulta puede venir en cualquier idioma.
-            8. Debes detectar tecnologías independientemente del idioma utilizado por el usuario.
-            9. La respuesta SIEMPRE debe estar normalizada al nombre oficial o más común de la tecnología en inglés.
-            10. Si la tecnología aparece traducida, transliterada o abreviada, conviértela a su nombre estándar en inglés.
-
-            IMPORTANTE:
-            NO consideres como tecnologías:
-            - empresas
-            - marcas
-            - universidades
-            - personas
-            - equipos
-            - productos genéricos
-            - áreas temáticas
-            - conceptos abstractos
-
-            Ejemplos que deben responder NONE:
-            - NVIDIA
-            - Google
-            - OpenAI
-            - Microsoft
-            - UNICEN
-            - NeuroAI Lab
-            - inteligencia artificial
-            - machine learning
-            - backend
-            - frontend
-
-            EXCEPCIÓN:
-            Si el nombre de una empresa o marca aparece como referencia explícita a una tecnología concreta, sí debes detectarla.
-
-            Ejemplos válidos:
-            - AWS
-            - Azure
-            - GPT-4
-            - TensorFlow
-            - PyTorch
-            - CUDA
-
-            MAPEO SEMÁNTICO Y NORMALIZACIÓN:
-            - reactjs → React
-            - react.js → React
-            - node → Node.js
-            - tf → TensorFlow
-            - js → JavaScript
-            - py → Python
-            - postgres → PostgreSQL
-            - pytorch lightning → PyTorch Lightning
-            - scikit learn → scikit-learn
-            - open cv → OpenCV
-            - docker compose → Docker Compose
-            - k8s → Kubernetes
-            - vue → Vue.js
-            - next → Next.js
-            - nest → NestJS
-
-            EJEMPLOS:
-
-            Pregunta: "¿Ha utilizado React en algún proyecto?"
-            Respuesta: React
-
-            Pregunta: "Dentro del proyecto Simulation Control App se utilizó el algoritmo DQN?"
-            Respuesta: DQN
-
-            Pregunta: "¿Tiene experiencia con FastAPI?"
-            Respuesta: FastAPI
-
-            Pregunta: "¿Qué aprendió en el workshop de Nvidia?"
-            Respuesta: NONE
-
-            Pregunta: "¿Trabajó con cloud computing?"
-            Respuesta: NONE
-
-            Pregunta: "¿Usó AWS para desplegar modelos?"
-            Respuesta: AWS
-
-            Pregunta: "Does he use TensorFlow or PyTorch?"
-            Respuesta: TensorFlow
-
-            Pregunta: "¿Tiene experiencia en backend?"
-            Respuesta: NONE
-
-            Pregunta: "Has he used redes neuronales convolucionales con TensorFlow?"
-            Respuesta: TensorFlow
-
-            Pregunta: "¿Trabajó con visión artificial usando OpenCV?"
-            Respuesta: OpenCV
-
-            Pregunta: "Utilizou Python em projetos de IA?"
-            Respuesta: Python
-
-            Pregunta: "A-t-il utilisé Docker pour le déploiement ?"
-            Respuesta: Docker
-
-            Pregunta: "Did he develop APIs with FastAPI?"
-            Respuesta: FastAPI
-
-            Pregunta del usuario:
-            {query}
-
-            Respuesta:"""
+    raw_prompt = load_prompt("tech_prompt.txt")
+    prompt = raw_prompt.format(query=query)
     response = llm.invoke([HumanMessage(content=prompt)])
     result = response.content.strip()
-    return None if result == "NONE" else result
+    return None if result == "NONE" else str.lower(result)
 
 def _extract_area(query: str, llm: ChatGroq) -> str | None:
-    """
-    Detecta si la pregunta hace referencia a un área temática conocida.
-    Solo se invoca cuando no se detectó tecnología específica.
-    Devuelve el nombre del área en el formato exacto de la BD o None.
-    """
-    from langchain_core.messages import HumanMessage
     areas_list = ", ".join(VALID_AREAS)
-    prompt = f"""Tu tarea es clasificar la consulta del usuario en UNA única área temática.
-
-                ÁREAS VÁLIDAS:
-                {areas_list}
-
-                REGLAS:
-                1. Responde ÚNICAMENTE con:
-                - el nombre exacto de una de las áreas válidas
-                - o NONE
-                2. No agregues explicaciones, puntuación, comentarios ni texto adicional.
-                3. La clasificación debe basarse en la intención principal de la consulta.
-                4. Si la consulta menciona múltiples áreas, elige la más relevante.
-                5. Si la consulta es general y no se relaciona claramente con un área específica, responde:
-                NONE
-                6. Usa inferencia semántica y sinónimos.
-                7. Considera variaciones lingüísticas, términos técnicos y lenguaje informal.
-                8. La consulta puede venir en español, inglés o mezclando ambos idiomas.
-                9. Debes detectar equivalencias semánticas independientemente del idioma utilizado.
-                10. Si una consulta contiene términos técnicos en inglés, clasifícala igualmente usando las áreas válidas.
-
-
-                MAPEO SEMÁNTICO IMPORTANTE:
-
-                - education:
-                cursos, curso, capacitación, capacitaciones, formación, estudios, universidad,
-                carrera, certificaciones, certificación, aprendizaje, materias, educación,
-                entrenamiento, bootcamp, diplomatura, workshop, talleres, courses, course, training,
-                education, studies, degree, university,certifications, certification, learning, 
-                bootcamp, workshops, academic background
-
-                - ai:
-                inteligencia artificial, ia, agentes inteligentes, llm, modelos generativos,
-                ai agents, genai, artificial intelligence, deep learning, redes neuronales, 
-                deep reinforcement learning,  artificial intelligence, intelligent agents, generative ai,
-                genai, llm, large language models
-
-                - ml:
-                machine learning, aprendizaje automático, reinforcement learning, predictive models
-
-                - robotics:
-                robots, robótica, automatización física, sistemas autónomos,  autonomous systems, automation
-
-                - nlp:
-                procesamiento de lenguaje natural, lenguaje natural, chatbots,
-                transformers, embeddings, texto,  natural language processing, nlp, 
-                chatbots, transformers, embeddings, text processing
-
-                - web:
-                frontend, backend, full stack, react, fastapi, api, web app, sitio web,
-                web development, web application
-
-                - programming:
-                programación, algoritmos, código, coding, software development,
-                python, java, c++, javascript, programming, coding, software engineering,
-                software development, algorithms
-
-                - computer vision:
-                visión por computadora, computer vision, imágenes, detección,
-                segmentación, video, reconocimiento visual, image processing, object detection,
-                segmentation, video analysis, visual recognition  
-
-                - data analytics:
-                análisis de datos, dashboards, métricas, business intelligence,
-                visualización de datos, analytics, data analytics, data analysis, dashboards,
-                business intelligence, data visualization
-
-                - activity:
-                actividades, voluntariado, eventos, participación, mentorías,
-                comunidades, activities, volunteering, events, mentoring,
-                communities, community participation
-
-
-                - languages:
-                idiomas, inglés, español, language skills, nivel de inglés,
-                languages, english, spanish, language skills, fluency, proficiency
-
-                EJEMPLOS:
-
-                Pregunta: "¿Qué cursos realizó Nahuel?"
-                Respuesta: education
-
-                Pregunta: "¿Tiene experiencia en redes neuronales?"
-                Respuesta: ml
-
-                Pregunta: "¿Qué proyectos hizo con agentes inteligentes?"
-                Respuesta: ai
-
-                Pregunta: "¿Participó en comunidades o eventos?"
-                Respuesta: activity
-
-                Pregunta: "¿Cuál es su experiencia laboral?"
-                Respuesta: NONE
-
-                Pregunta: "¿Habla inglés?"
-                Respuesta: languages
-
-                Pregunta: "What courses has Nahuel completed?"
-                Respuesta: education
-
-                Pregunta: "Does he have experience with neural networks?"
-                Respuesta: ml
-
-                Pregunta: "Tell me about his AI projects"
-                Respuesta: ai
-
-                Pregunta del usuario:
-                {query}
-
-                Respuesta:"""
+    raw_prompt = load_prompt("area_prompt.txt")
+    prompt = raw_prompt.format(areas_list=areas_list, query=query)
     response = llm.invoke([HumanMessage(content=prompt)])
     result = response.content.strip()
     return None if result.upper() == "NONE" else result
-#-- Busqueda de entry_ids por tecnología y por área ─────────────────────────────────────────────────
-def _get_entry_ids_by_technology(tech_name: str) -> list[int]:
-    """
-    Consulta SQLite para obtener entry_ids que usan una tecnología específica.
-    Búsqueda case-insensitive por nombre de tecnología.
-    """
-    engine = create_engine(DB_URL, echo=False)
-    with Session(engine) as session:
-        rows = session.execute(
-            text("""
-                SELECT ket.entry_id
-                FROM knowledge_entry_technologies ket
-                JOIN technologies t ON ket.technology_id = t.id
-                WHERE LOWER(t.name) = LOWER(:tech_name)
-            """),
-            {"tech_name": tech_name}
-        ).fetchall()
-    return [row[0] for row in rows]
 
-def _get_entry_ids_by_area(area_name: str) -> list[int]:
-    """
-    Consulta SQLite para obtener entry_ids cuya área primaria o secundaria
-    coincida con el área detectada. Case-insensitive.
-    """
-    engine = create_engine(DB_URL, echo=False)
-    with Session(engine) as session:
-        rows = session.execute(
-            text("""
-                SELECT id FROM knowledge_entries
-                WHERE LOWER(area) = LOWER(:area_name)
-                   OR LOWER(area_secondary) = LOWER(:area_name)
-            """),
-            {"area_name": area_name}
-        ).fetchall()
-    return [row[0] for row in rows]
+#-- Busqueda de entry_ids por tecnología y por área ─────────────────────────────────────────────────
+def _get_entry_ids_by_technology(tech_name: str, vector_store: Chroma) -> list[int]:
+    """Consulta ChromaDB para obtener entry_ids que contengan la tecnología."""
+    results = vector_store.get(
+        where={"technologies": {"$contains": tech_name}},
+        include=["metadatas"]
+    )
+    if not results or not results["metadatas"]:
+        return []
+    # Usamos set() para eliminar duplicados
+    return list(set(meta.get("entry_id") for meta in results["metadatas"] if meta.get("entry_id") is not None))
+
+def _get_entry_ids_by_area(area_name: str, vector_store: Chroma) -> list[int]:
+    """Consulta ChromaDB para obtener entry_ids por área primaria o secundaria."""
+    results = vector_store.get(
+        where={
+            "$or": [
+                {"area": area_name},
+                {"area_secondary": area_name}
+            ]
+        },
+        include=["metadatas"]
+    )
+    if not results or not results["metadatas"]:
+        return []
+    return list(set(meta.get("entry_id") for meta in results["metadatas"] if meta.get("entry_id") is not None))
 
 #-- Diversificación y recuperación de documentos padre (entry_id) ──────────────────────────────────────────────
 
@@ -466,7 +217,7 @@ class DiversifiedRetriever(BaseRetriever):
         tech = _extract_technology(query, self.llm)
         print("🔍 Tecnología detectada:", tech)
         if tech:
-            entry_ids = _get_entry_ids_by_technology(tech)
+            entry_ids = _get_entry_ids_by_technology(tech, self.vector_store)
             if entry_ids:
                 combined_docs.extend([Document(page_content="", metadata={"entry_id": eid}) for eid in entry_ids])
         else:
@@ -474,7 +225,7 @@ class DiversifiedRetriever(BaseRetriever):
             area = _extract_area(query, self.llm)
             print("🔍 Área detectada:", area)
             if area:
-                entry_ids = _get_entry_ids_by_area(area)
+                entry_ids = _get_entry_ids_by_area(area, self.vector_store)
                 if entry_ids:
                     combined_docs.extend([Document(page_content="", metadata={"entry_id": eid}) for eid in entry_ids])
 
@@ -497,14 +248,14 @@ class DiversifiedRetriever(BaseRetriever):
         tech = _extract_technology(query, self.llm)
         print("🔍 Tecnología detectada:", tech)
         if tech:
-            entry_ids = _get_entry_ids_by_technology(tech)
+            entry_ids = _get_entry_ids_by_technology(tech, self.vector_store)
             if entry_ids:
                 combined_docs.extend([Document(page_content="", metadata={"entry_id": eid}) for eid in entry_ids])
         else:
             area = _extract_area(query, self.llm)
             print("🔍 Área detectada:", area)
             if area:
-                entry_ids = _get_entry_ids_by_area(area)
+                entry_ids = _get_entry_ids_by_area(area, self.vector_store)
                 if entry_ids:
                     combined_docs.extend([Document(page_content="", metadata={"entry_id": eid}) for eid in entry_ids])
             
@@ -548,7 +299,7 @@ def build_retriever() -> ContextualCompressionRetriever:
 
 if __name__ == "__main__":
     retriever = build_retriever()
-    docs = retriever.invoke("¿Qué tecnologías se usó para desarrollar la plataforma de entrenamiento?")
+    docs = retriever.invoke("¿Hizo algun trabajo relacionado la IA?")
     print(f"Total docs al LLM: {len(docs)}")
     for d in docs:
         print(d.metadata.get("entry_name"), "|", d.metadata.get("doc_type"), "|", d.page_content[:120])
