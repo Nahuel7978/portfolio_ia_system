@@ -12,11 +12,9 @@ import chromadb
 from chromadb.config import Settings
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_chroma import Chroma
-from src.pre_process.chunking import chunk_all_documents, chunk_single_project, chunk_single_document
+from langchain_core.documents import Document
 
 # ── Configuración ─────────────────────────────────────────────────────────────
-
-CHROMA_PATH = "./chroma_db"
 COLLECTION_NAME = "knowledge_base"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
@@ -32,60 +30,30 @@ def get_embedding_function() -> HuggingFaceEndpointEmbeddings:
 
 # ── Ingesta ───────────────────────────────────────────────────────────────────
 
-def build_vector_store() -> Chroma:
-    print("── Cargando y chunkeando documentos ──")
-    chunks = chunk_all_documents()
-
+def upsert_documents(chunks: list[Document]) -> None:
+    """
+    Recibe los chunks procesados en el endpoint HTTP y los persiste en ChromaDB.
+    """
     if not chunks:
-        raise ValueError("No se generaron chunks. Verificá los archivos y la DB.")
-
-    print(f"\n── Inicializando ChromaDB en: {CHROMA_PATH} ──")
-    embedding_fn = get_embedding_function()
-
-    vector_store = Chroma.from_documents(
-        documents=chunks,
-        embedding=embedding_fn,
-        collection_name=COLLECTION_NAME,
-        persist_directory=CHROMA_PATH,
-        collection_metadata={"hnsw:space": "cosine"},
-    )
-
-    print(f"✓ {len(chunks)} chunks indexados en la colección '{COLLECTION_NAME}'.")
-    return vector_store
-
-
-def build_single_vector(pk_entry: int) -> None:
-    print(f"── Procesando KnowledgeEntry id={pk_entry} ──")
-    chunks = chunk_single_project(pk_entry)
-
-    if not chunks:
-        print(f"  [WARN] No se generaron chunks para entry {pk_entry}.")
+        print("  [WARN] No hay chunks para insertar.")
         return
 
-    vs = load_vector_store() #la colección ya existe en disco, solo se agregan los chunks nuevos
+    vs = load_vector_store() # Tu función actual que usa chromadb.HttpClient
     vs.add_documents(chunks)
-    print(f"✓ {len(chunks)} chunks indexados para entry {pk_entry}.")
-
-
-def build_single_document(pk_document: int) -> None:
-    print(f"── Procesando Document id={pk_document} ──")
-    chunks = chunk_single_document(pk_document)
-
-    if not chunks:
-        print(f"  [WARN] No se generaron chunks para document {pk_document}.")
-        return
-
-    vs = load_vector_store() #la colección ya existe en disco, solo se agregan los chunks nuevos
-    vs.add_documents(chunks)
-    print(f"✓ {len(chunks)} chunks indexados para document {pk_document}.")
+    print(f"✓ {len(chunks)} chunks indexados en ChromaDB vía HTTP.")
 
 # ── Carga (sin re-indexar) ────────────────────────────────────────────────────
 
 def load_vector_store() -> Chroma:
+    # Usamos db-chroma que es el nombre del contenedor en la red de Docker
+    chroma_host = os.getenv("CHROMA_HOST", "db-chroma")
+    chroma_port = int(os.getenv("CHROMA_PORT", 8000))
+    
+    http_client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
     embedding_fn = get_embedding_function()
     return Chroma(
+        client=http_client,
         collection_name=COLLECTION_NAME,
-        persist_directory=CHROMA_PATH,
         embedding_function=embedding_fn,
     )
 
@@ -130,9 +98,6 @@ def validate_retrieval(vector_store: Chroma) -> None:
 
 
 if __name__ == "__main__":
-    
-    build_vector_store()  # Solo ejecutar la primera vez o cuando se agreguen muchos documentos nuevos
-    #build_single_document(31)
     """
     vs = load_vector_store()
 
