@@ -14,9 +14,8 @@ unstructured[md]
 pypdf
 sentence-transformers
 chromadb
-sqlalchemy
 lark
-
+python-multipart
 #Dependencias soporte
 python-frontmatter   # para leer/escribir el YAML frontmatter
 pydantic             # validación del esquema de metadatos
@@ -26,3 +25,5 @@ pydantic             # validación del esquema de metadatos
 fastapi
 uvicorn
 python-dotenv
+PyJWT
+slowapi
