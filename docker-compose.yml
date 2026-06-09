@@ -44,27 +44,25 @@ services:
 
   # 4. AI Core (FastAPI - Base)
   ai-core:
-    image: python:3.10-slim
+    build: 
+      context: ./ai-core
+      dockerfile: Dockerfile
     container_name: app-ai-core
-    working_dir: /app
+    ports:
+      - "8001:8001" # <- Corregido: Host 8001 hacia Contenedor 8001
     volumes:
-      - ./ai-core:/app
-    command: tail -f /dev/null
+      - ./ai-core:/app # <- Montaje de tu código fuente en tiempo real
+    command: ["uvicorn", "src.API.api_main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"] # <- Añadido: Flag --reload
+    environment:
+      - CHROMA_HOST=db-chroma
+      - CHROMA_PORT=8000
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - COHERE_API_KEY=${COHERE_API_KEY}
+      # Añadiremos el internal secret más adelante
     networks:
       - portfolio-network
     depends_on:
       - chromadb
-
-  # 5. Frontend (Angular - Base)
-  frontend:
-    image: node:20-alpine
-    container_name: app-frontend
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-    command: tail -f /dev/null
-    networks:
-      - portfolio-network
 
 networks:
   portfolio-network:
