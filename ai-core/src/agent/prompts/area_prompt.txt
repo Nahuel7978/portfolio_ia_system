@@ -1,0 +1,109 @@
+Tu tarea es clasificar la consulta del usuario en UNA única área temática.
+
+                ÁREAS VÁLIDAS:
+                {areas_list}
+
+                REGLAS:
+                1. Responde ÚNICAMENTE con:
+                - el nombre exacto de una de las áreas válidas
+                - o NONE
+                2. No agregues explicaciones, puntuación, comentarios ni texto adicional.
+                3. La clasificación debe basarse en la intención principal de la consulta.
+                4. Si la consulta menciona múltiples áreas, elige la más relevante.
+                5. Si la consulta es general y no se relaciona claramente con un área específica, responde:
+                NONE
+                6. Usa inferencia semántica y sinónimos.
+                7. Considera variaciones lingüísticas, términos técnicos y lenguaje informal.
+                8. La consulta puede venir en español, inglés o mezclando ambos idiomas.
+                9. Debes detectar equivalencias semánticas independientemente del idioma utilizado.
+                10. Si una consulta contiene términos técnicos en inglés, clasifícala igualmente usando las áreas válidas.
+
+
+                MAPEO SEMÁNTICO IMPORTANTE:
+
+                - education:
+                cursos, curso, capacitación, capacitaciones, formación, estudios, universidad,
+                carrera, certificaciones, certificación, aprendizaje, materias, educación,
+                entrenamiento, bootcamp, diplomatura, workshop, talleres, courses, course, training,
+                education, studies, degree, university,certifications, certification, learning, 
+                bootcamp, workshops, academic background
+
+                - ai:
+                inteligencia artificial, ia, agentes inteligentes, llm, modelos generativos,
+                ai agents, genai, artificial intelligence, deep learning, redes neuronales, 
+                deep reinforcement learning,  artificial intelligence, intelligent agents, generative ai,
+                genai, llm, large language models
+
+                - ml:
+                machine learning, aprendizaje automático, reinforcement learning, predictive models
+
+                - robotics:
+                robots, robótica, automatización física, sistemas autónomos,  autonomous systems, automation
+
+                - nlp:
+                procesamiento de lenguaje natural, lenguaje natural, chatbots,
+                transformers, embeddings, texto,  natural language processing, nlp, 
+                chatbots, transformers, embeddings, text processing
+
+                - web:
+                frontend, backend, full stack, react, fastapi, api, web app, sitio web,
+                web development, web application
+
+                - programming:
+                programación, algoritmos, código, coding, software development,
+                python, java, c++, javascript, programming, coding, software engineering,
+                software development, algorithms
+
+                - computer vision:
+                visión por computadora, computer vision, imágenes, detección,
+                segmentación, video, reconocimiento visual, image processing, object detection,
+                segmentation, video analysis, visual recognition  
+
+                - data analytics:
+                análisis de datos, dashboards, métricas, business intelligence,
+                visualización de datos, analytics, data analytics, data analysis, dashboards,
+                business intelligence, data visualization
+
+                - activity:
+                actividades, voluntariado, eventos, participación, mentorías,
+                comunidades, activities, volunteering, events, mentoring,
+                communities, community participation
+
+
+                - languages:
+                idiomas, inglés, español, language skills, nivel de inglés,
+                languages, english, spanish, language skills, fluency, proficiency
+
+                EJEMPLOS:
+
+                Pregunta: "¿Qué cursos realizó Nahuel?"
+                Respuesta: education
+
+                Pregunta: "¿Tiene experiencia en redes neuronales?"
+                Respuesta: ml
+
+                Pregunta: "¿Qué proyectos hizo con agentes inteligentes?"
+                Respuesta: ai
+
+                Pregunta: "¿Participó en comunidades o eventos?"
+                Respuesta: activity
+
+                Pregunta: "¿Cuál es su experiencia laboral?"
+                Respuesta: NONE
+
+                Pregunta: "¿Habla inglés?"
+                Respuesta: languages
+
+                Pregunta: "What courses has Nahuel completed?"
+                Respuesta: education
+
+                Pregunta: "Does he have experience with neural networks?"
+                Respuesta: ml
+
+                Pregunta: "Tell me about his AI projects"
+                Respuesta: ai
+
+                Pregunta del usuario:
+                {query}
+
+                Respuesta:
