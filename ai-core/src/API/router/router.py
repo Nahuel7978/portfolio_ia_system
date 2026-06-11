@@ -14,10 +14,11 @@ from src.API.security.security import create_chat_token, verify_chat_token, limi
 from src.agent.Chain import build_cv_agent, _session_store
 import json
 import os
+import asyncio
 from pydantic import BaseModel
 from pathlib import Path
 from src.pre_process.chunking import chunk_incoming_file
-from src.vector_load.vector_store import upsert_documents
+from src.vector_load.vector_store import upsert_documents, delete_document_chunks
 from dotenv import load_dotenv
 from src.vector_load.vector_store import upsert_documents
 from src.API.models.DocumentUpsertRequest import DocumentUpsertRequest
@@ -25,7 +26,7 @@ from src.agent.Chain import build_cv_agent, _session_store
 
 router = APIRouter()
 load_dotenv()
-
+vector_db_lock = asyncio.Lock()
 # Inicializar el agente una sola vez al levantar el servidor
 cv_agent = build_cv_agent()
 
@@ -49,8 +50,11 @@ async def get_chat_token(request: Request):
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
+class ChatRequest(BaseModel):
+    message: str
+
 @router.post("/chat", response_model=dict)
-@limiter.limit("15/minute") # Límite para evitar spam de mensajes
+@limiter.limit("15/minute")
 async def chat(
     request: Request, 
     payload: ChatRequest, 
@@ -59,13 +63,15 @@ async def chat(
     if not payload.message.strip():
         raise HTTPException(status_code=400, detail="El mensaje no puede estar vacío.")
 
-    result = cv_agent.invoke(
-        {"input": payload.message},
-        config={"configurable": {"session_id": session_id}},
-    )
+    # BLOQUEO CRÍTICO: Si hay un Upsert/Delete en curso, el chat hace una pausa aquí
+    async with vector_db_lock:
+        # NOTA: Usamos ainvoke (Async Invoke) para que no bloquee el event loop de FastAPI
+        result = await cv_agent.ainvoke(
+            {"input": payload.message},
+            config={"configurable": {"session_id": session_id}},
+        )
 
     return {"answer": result["answer"]}
-
 
 @router.delete("/session/{session_id}")
 async def clear_session(session_id: str) -> dict:
@@ -85,30 +91,46 @@ def verify_internal_secret(x_internal_secret: str = Header(...)):
 @router.post("/internal/documents/upsert", dependencies=[Depends(verify_internal_secret)])
 async def upsert_internal_document(
     file: UploadFile = File(...),
-    metadata: str = Form(...) # Recibimos el JSON serializado como un string
+    metadata: str = Form(...) 
 ):
     try:
-        # 1. Parsear los metadatos desde el string
-        try:
-            meta_dict = json.loads(metadata)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="El campo metadata debe ser un JSON válido.")
+        meta_dict = json.loads(metadata)
+        document_id = meta_dict.get("document_id")
+        
+        if document_id is None:
+             raise HTTPException(status_code=400, detail="Falta document_id en metadata")
 
-        # 2. Guardar el archivo temporalmente en el contenedor
         temp_file_path = f"/tmp/{file.filename}"
         with open(temp_file_path, "wb") as buffer:
             buffer.write(await file.read())
 
-        # 3. Procesar y Vectorizar
         try:
             chunks = chunk_incoming_file(temp_file_path, meta_dict)
-            upsert_documents(chunks)
+            
+            # BLOQUEO CRÍTICO: Operación Atómica de Reemplazo
+            async with vector_db_lock:
+                delete_document_chunks(document_id) # 1. Purgar versión vieja
+                upsert_documents(chunks)            # 2. Insertar versión nueva
+                
         finally:
-            # 4. Limpieza Crítica: Siempre eliminar el archivo temporal
             if os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
 
-        return {"status": "success", "message": f"{len(chunks)} chunks vectorizados exitosamente."}
+        return {"status": "success", "message": f"Documento {document_id} actualizado ({len(chunks)} chunks)."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/internal/documents/{document_id}", dependencies=[Depends(verify_internal_secret)])
+async def delete_internal_document(document_id: int):
+    """
+    Endpoint invocado por Spring Boot cuando se elimina un archivo o proyecto.
+    """
+    try:
+        # BLOQUEO CRÍTICO: Evita que el RAG lea mientras se borra
+        async with vector_db_lock:
+            delete_document_chunks(document_id)
+            
+        return {"status": "success", "message": f"Documento {document_id} purgado de la base vectorial."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
