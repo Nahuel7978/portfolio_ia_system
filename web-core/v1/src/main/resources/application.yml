@@ -32,3 +32,8 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 15MB
+  # Configuración de Integración con AI Core
+  ai-core:
+    # Usamos el nombre del contenedor y el puerto interno (8000)
+    upsert-url: ${FASTAPI_URL:http://app-ai-core:8000/CV_BOT_API/v1/internal/documents/upsert}
+    internal-secret: ${X_INTERNAL_SECRET:INTERNAL_INTERNAL}
