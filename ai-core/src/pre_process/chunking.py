@@ -88,14 +88,16 @@ def chunk_incoming_file(file_path: str, metadata: dict) -> list[Document]:
     else:
         chunks = splitter.split_documents(raw_docs)
 
-    techs = metadata.get("technologies", "")
-    area = metadata.get("area", "")
+    techs = str.lower(metadata.get("technologies", ""))
+    area = str.lower(metadata.get("area", ""))
+    entry_name = str.lower(metadata.get("entry_name", ""))
     area_secondary = metadata.get("area_secondary", "")
-    entry_name = metadata.get("entry_name", "")
+    if(area_secondary!=None):
+        area_secondary = str.lower(area_secondary)
 
     for chunk in chunks:
         chunk.metadata.update(metadata)
-        metadata_header = f"[Fragment Context -> Project: {str.lower(entry_name)} | Area: {str.lower(area)} | Area Sencondary: {str.lower(area_secondary)} | Technologies: {str.lower(techs)}]\n"
+        metadata_header = f"[Fragment Context -> Project: {entry_name} | Area: {area} | Area Sencondary: {area_secondary} | Technologies: {techs}]\n"
         chunk.page_content = metadata_header + chunk.page_content
 
     return chunks
