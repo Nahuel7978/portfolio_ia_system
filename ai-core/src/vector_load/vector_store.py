@@ -42,6 +42,20 @@ def upsert_documents(chunks: list[Document]) -> None:
     vs.add_documents(chunks)
     print(f"✓ {len(chunks)} chunks indexados en ChromaDB vía HTTP.")
 
+
+# ── Eliminación ───────────────────────────────────────────────────────────────────
+def delete_document_chunks(document_id: int) -> None:
+    """
+    Elimina todos los fragmentos asociados a un document_id específico.
+    Utiliza el motor nativo de ChromaDB para filtrar por metadata.
+    """
+    vs = load_vector_store()
+    try:
+        # Accedemos a la colección nativa subyacente de ChromaDB
+        vs._collection.delete(where={"document_id": document_id})
+        print(f"🗑️ [ChromaDB] Chunks del documento {document_id} purgados.")
+    except Exception as e:
+        print(f"⚠️ [ChromaDB] Error al purgar documento {document_id}: {e}")
 # ── Carga (sin re-indexar) ────────────────────────────────────────────────────
 
 def load_vector_store() -> Chroma:
