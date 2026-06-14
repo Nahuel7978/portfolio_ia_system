@@ -68,7 +68,7 @@ export class EntryFormComponent implements OnInit {
     const projectAreas = ['AI', 'ML', 'Robotics', 'NLP', 'Web', 'Programming', 'Computer Vision', 'Data Analytics'];
 
     if (this.entryType === 'blog') {
-      this.primaryAreas = ['Blog', 'Activity'];
+      this.primaryAreas = ['Blog', 'Activity', 'Education', 'Languages'];
       this.secondaryAreas = blogAreas;
     } else {
       this.primaryAreas = projectAreas;
