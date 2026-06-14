@@ -66,10 +66,7 @@ async def chat(
     # BLOQUEO CRÍTICO: Si hay un Upsert/Delete en curso, el chat hace una pausa aquí
     async with vector_db_lock:
         # NOTA: Usamos ainvoke (Async Invoke) para que no bloquee el event loop de FastAPI
-        result = await cv_agent.ainvoke(
-            {"input": payload.message},
-            config={"configurable": {"session_id": session_id}},
-        )
+        result = await cv_agent(query=payload.message, session_id=session_id)
 
     return {"answer": result["answer"]}
 
