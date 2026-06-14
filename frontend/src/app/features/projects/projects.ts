@@ -33,7 +33,7 @@ export class ProjectsComponent implements OnInit {
 
   ngOnInit() {
     this.entryService.getProjects().subscribe(data => {
-      this.projects = data;
+      this.projects = data.sort((a, b) => Number(b.id) - Number(a.id));
       
       if (isPlatformBrowser(this.platformId)) {
         setTimeout(() => this.initScrollAnimation(), 50);
