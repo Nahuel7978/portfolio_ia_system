@@ -35,7 +35,7 @@ public class KnowledgeEntryService {
 
 
     private static final List<String> VALID_AREAS = Arrays.asList(
-            "AI", "ML", "Robotics", "NLP", "Web", "Programming", "Computer Vision", "Data Analytics", "Education", "Activity", "Languages", "Blog"
+            "AI", "ML", "Robotics", "NLP", "Web", "Programming", "Computer Vision", "Data Analytics", "Education", "Activity", "Languages", "Blog", "Experience"
     );
     private static final List<String> VALID_STATUS = Arrays.asList("active", "completed");
     private static final List<String> VALID_ROLES = Arrays.asList("primary", "secondary");
@@ -108,7 +108,7 @@ public class KnowledgeEntryService {
     @Transactional(readOnly = true)
     public List<KnowledgeEntryDTO> getPublicProjects() {
         // Excluimos Activity y Blog
-        List<KnowledgeEntry> projects = entryRepository.findByAreaNotIn(List.of("Activity", "Blog"));
+        List<KnowledgeEntry> projects = entryRepository.findByAreaNotIn(List.of("Activity", "Blog", "Education", "Languages", "Experience"));
         return projects.stream()
                 .map(mapper::toDTO)
                 .toList();
@@ -117,7 +117,7 @@ public class KnowledgeEntryService {
     @Transactional(readOnly = true)
     public List<KnowledgeEntryDTO> getPublicBlogs() {
         // Incluimos solo Activity y Blog
-        List<KnowledgeEntry> blogs = entryRepository.findByAreaIn(List.of("Activity", "Blog"));
+        List<KnowledgeEntry> blogs = entryRepository.findByAreaIn(List.of("Blog"));
         return blogs.stream()
                 .map(mapper::toDTO)
                 .toList();

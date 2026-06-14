@@ -68,6 +68,7 @@ public class DocumentSyncScheduler {
 
             // 1. Construir la Metadata (Mapeo a JSON)
             Map<String, Object> metadata = new HashMap<>();
+            metadata.put("document_id", doc.getId());
             metadata.put("entry_id", entry.getId());
             metadata.put("entry_name", entry.getName());
             metadata.put("doc_type", doc.getDocType());

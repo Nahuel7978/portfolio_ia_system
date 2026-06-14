@@ -1,7 +1,10 @@
 package portfolio_spring.v1.service;
 
+
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import portfolio_spring.v1.dto.DocumentResponseDTO;
@@ -10,19 +13,35 @@ import portfolio_spring.v1.model.KnowledgeEntry;
 import portfolio_spring.v1.repository.DocumentRepository;
 import portfolio_spring.v1.repository.KnowledgeEntryRepository;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class DocumentService {
+	
+	private static final Logger logger = LoggerFactory.getLogger(DocumentService.class);
 
     private final DocumentRepository documentRepository;
     private final KnowledgeEntryRepository entryRepository;
+    
+    private final RestTemplate restTemplate;
+    private final String fastApiUrl = "http://localhost:8001/CV_BOT_API/v1/internal/documents";
+    private final String internalSecret ="INTERNAL_INTERNAL";
 
     public DocumentService(DocumentRepository documentRepository, KnowledgeEntryRepository entryRepository) {
         this.documentRepository = documentRepository;
         this.entryRepository = entryRepository;
+        this.restTemplate = new RestTemplate();
     }
 
     @Transactional
@@ -112,5 +131,33 @@ public class DocumentService {
             throw new RuntimeException("Documento no encontrado con ID: " + documentId);
         }
         documentRepository.deleteById(documentId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Internal-Secret", internalSecret);
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+        String deleteUrl = fastApiUrl + "/" + documentId;
+        try {
+            logger.info("Enviando petición DELETE a FastAPI para purgar el documento ID: {}", documentId);
+            
+            ResponseEntity<String> response = restTemplate.exchange(
+                    deleteUrl,
+                    HttpMethod.DELETE,
+                    requestEntity,
+                    String.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                logger.info("✅ Documento {} purgado de ChromaDB exitosamente.", documentId);
+            } else {
+                logger.warn("⚠️ FastAPI devolvió código {} al intentar borrar el documento {}", response.getStatusCode(), documentId);
+            }
+
+        } catch (Exception e) {
+            logger.error("❌ Error de red al intentar eliminar el documento {} de ChromaDB: {}", documentId, e.getMessage());
+            
+            // ATENCIÓN - DECISIÓN DE DISEÑO:
+            // Si comentas la siguiente línea, un fallo en FastAPI cancelará el borrado en PostgreSQL.
+            // Si no la comentas, PostgreSQL borrará el archivo, pero ChromaDB mantendrá "basura" si la red falla.
+            throw new RuntimeException("No se pudo sincronizar la eliminación con el motor de IA.", e);
+        }
     }
 }
