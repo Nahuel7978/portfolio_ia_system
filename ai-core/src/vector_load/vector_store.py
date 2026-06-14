@@ -112,7 +112,7 @@ def validate_retrieval(vector_store: Chroma) -> None:
 
 
 if __name__ == "__main__":
-    """
+    
     vs = load_vector_store()
 
     # Test 1: ¿Están los chunks de esos proyectos en Chroma?
@@ -133,4 +133,4 @@ if __name__ == "__main__":
     print("\nSin filtro, Top-20:")
     for i, d in enumerate(results_nf):
         print(i+1, d.metadata.get("entry_name"), "|", d.metadata.get("area"), "|", d.metadata.get("area_secondary"))
-    """
+    
