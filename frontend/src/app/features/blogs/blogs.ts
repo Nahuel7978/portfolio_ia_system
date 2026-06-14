@@ -33,7 +33,7 @@ export class BlogsComponent implements OnInit {
 
   ngOnInit() {
     this.entryService.getBlogs().subscribe(data => {
-      this.blogs = data;
+      this.blogs = data.sort((a, b) => Number(b.id) - Number(a.id));
       
       if (isPlatformBrowser(this.platformId)) {
         setTimeout(() => this.initScrollAnimation(), 50);
