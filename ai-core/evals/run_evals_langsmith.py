@@ -5,7 +5,7 @@ Ejecuta el benchmark del Agente CV contra el Golden Dataset en LangSmith.
 Flujo:
     1. Carga el dataset desde LangSmith por nombre
     2. Invoca el agente CV por cada ejemplo
-    3. Evalúa con el evaluador LLM-as-a-Judge configurado en LangSmith (Gemini)
+    3. Evalúa con el evaluador LLM-as-a-Judge configurado en LangSmith (Claude)
     4. Los resultados quedan visibles en la plataforma
 
 Uso: python evals/run_evals_langsmith.py
@@ -13,15 +13,15 @@ Uso: python evals/run_evals_langsmith.py
 
 import os
 import sys
+import json
+from dotenv import load_dotenv
 import uuid
 import asyncio
-from dotenv import load_dotenv
-
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from langsmith import Client, evaluate
+from langsmith import Client, aevaluate
 from langsmith.evaluation import EvaluationResult
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 
 from src.agent.Chain import build_cv_agent
@@ -29,51 +29,41 @@ from src.agent.Chain import build_cv_agent
 # ── Configuración ─────────────────────────────────────────────────────────────
 load_dotenv()
 
-
 DATASET_NAME      = "golden_dataset_cv_bot"
-EXPERIMENT_PREFIX = "cv-agent-sprint2"
-EVAL_MODEL        = "gemini-2.5-flash-lite"
+EXPERIMENT_PREFIX = "cv-agent-sprint5-openrouter"
+
+EVAL_MODEL        = "openai/gpt-4o"
+
+# ── Configuración del Evaluador OpenRouter ────────────────────────────────────
+_eval_llm = ChatOpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    model=EVAL_MODEL,
+    temperature=0.0
+)
 
 # ── Agente (singleton) ────────────────────────────────────────────────────────
-
 print("── Inicializando agente CV ──")
 agent = build_cv_agent()
 
 # ── Función objetivo ──────────────────────────────────────────────────────────
-
-def target(inputs: dict) -> dict:
+async def target(inputs: dict) -> dict:
     """
     Invocada por LangSmith por cada fila del dataset.
     Retorna answer y contexts para que los evaluadores puedan usarlos.
     """
-    question   = inputs.get("question", "")
-    session_id = f"eval-{uuid.uuid4().hex[:8]}"
-
-    result = agent.invoke(
-        {"input": question},
-        config={"configurable": {"session_id": session_id}},
-    )
-
-    answer    = result.get("answer", "")
-    contexts  = [
-        doc.page_content
-        for doc in result.get("context", [])
-        if hasattr(doc, "page_content")
-    ]
+    question = inputs["question"]
+    # Generamos un ID de sesión simulado para aislar el contexto
+    session_id = "eval_" + str(os.urandom(4).hex())
+    
+    result = await agent(query=question, session_id=session_id)
 
     return {
-        "answer":   answer,
-        "contexts": contexts,
+        "answer": result["answer"],
+        "contexts": [doc.page_content for doc in result["context"]] if result["context"] else []
     }
 
-# ── Evaluador LLM-as-a-Judge (replica el prompt configurado en LangSmith) ─────
-
-_eval_llm = ChatGoogleGenerativeAI(
-    model=EVAL_MODEL,
-    google_api_key=os.environ["GOOGLE_API_KEY"],
-    temperature=0,
-)
-
+# ── Evaluadores Personalizados (LLM-as-a-Judge) ───────────────────────────────
 JUDGE_PROMPT = """You are an expert evaluator assessing the quality of an AI assistant's answer about a professional's CV.
 
 <Rubric>
@@ -104,7 +94,6 @@ Never reward hallucinated facts not present in the reference output.
 <referenceOutput>{reference}</referenceOutput>
 
 Respond with valid JSON only, example: {{"score": 0.85, "comment": "Answer is accurate but slightly verbose."}}"""
-
 
 def llm_judge_evaluator(inputs: dict, outputs: dict, reference_outputs: dict) -> EvaluationResult:
     """
@@ -141,7 +130,6 @@ def llm_judge_evaluator(inputs: dict, outputs: dict, reference_outputs: dict) ->
         comment=comment,
     )
 
-
 def faithfulness_evaluator(inputs: dict, outputs: dict, reference_outputs: dict) -> EvaluationResult:
     """
     Evalúa si la respuesta está basada en los contextos recuperados.
@@ -155,17 +143,17 @@ def faithfulness_evaluator(inputs: dict, outputs: dict, reference_outputs: dict)
 
     prompt = f"""You are evaluating faithfulness: whether the answer is grounded in the provided context.
 
-Context:
-{context_text}
+                Context:
+                {context_text}
 
-Answer:
-{answer}
+                Answer:
+                {answer}
 
-Score 1.0 if every claim in the answer is supported by the context.
-Score 0.0 if the answer contains facts not present in the context (hallucinations).
-Score between 0 and 1 for partial faithfulness.
+                Score 1.0 if every claim in the answer is supported by the context.
+                Score 0.0 if the answer contains facts not present in the context (hallucinations).
+                Score between 0 and 1 for partial faithfulness.
 
-Respond with valid JSON only: {{"score": 0.9, "comment": "brief explanation"}}"""
+                Respond with valid JSON only: {{"score": 0.9, "comment": "brief explanation"}}"""
 
     try:
         response = _eval_llm.invoke([HumanMessage(content=prompt)])
@@ -178,7 +166,6 @@ Respond with valid JSON only: {{"score": 0.9, "comment": "brief explanation"}}""
         comment = f"Error: {e}"
 
     return EvaluationResult(key="faithfulness", score=score, comment=comment)
-
 
 def context_recall_evaluator(inputs: dict, outputs: dict, reference_outputs: dict) -> EvaluationResult:
     """
@@ -194,17 +181,17 @@ def context_recall_evaluator(inputs: dict, outputs: dict, reference_outputs: dic
 
     prompt = f"""You are evaluating context recall: whether the retrieved context contains the information needed to answer the question correctly.
 
-Question: {question}
-Ground Truth Answer: {reference}
+                Question: {question}
+                Ground Truth Answer: {reference}
 
-Retrieved Context:
-{context_text}
+                Retrieved Context:
+                {context_text}
 
-Score 1.0 if the context contains all the information needed to produce the ground truth answer.
-Score 0.0 if the context is completely missing the relevant information.
-Score between 0 and 1 for partial recall.
+                Score 1.0 if the context contains all the information needed to produce the ground truth answer.
+                Score 0.0 if the context is completely missing the relevant information.
+                Score between 0 and 1 for partial recall.
 
-Respond with valid JSON only: {{"score": 0.8, "comment": "brief explanation"}}"""
+                Respond with valid JSON only: {{"score": 0.8, "comment": "brief explanation"}}"""
 
     try:
         response = _eval_llm.invoke([HumanMessage(content=prompt)])
@@ -218,16 +205,14 @@ Respond with valid JSON only: {{"score": 0.8, "comment": "brief explanation"}}""
 
     return EvaluationResult(key="context_recall", score=score, comment=comment)
 
-
 # ── Main ──────────────────────────────────────────────────────────────────────
-
-def main():
-    print(f"\n══ CV Agent Benchmark - Sprint 2 ══")
+async def main():
+    print(f"\n══ CV Agent Benchmark - Integración Real ══")
     print(f"   Dataset:    {DATASET_NAME}")
     print(f"   Evaluador:  {EVAL_MODEL}")
     print(f"   Experimento: {EXPERIMENT_PREFIX}\n")
 
-    results = evaluate(
+    results = await aevaluate(
         target,
         data=DATASET_NAME,
         evaluators=[
@@ -237,17 +222,13 @@ def main():
         ],
         experiment_prefix=EXPERIMENT_PREFIX,
         metadata={
-            "sprint":    "Sprint 2",
-            "retriever": "SelfQuery + Diversify + ParentFetch + CohereRerank",
-            "llm":       "llama-3.3-70b-versatile",
+            "sprint":    "Sprint 5",
+            "retriever": "Vectorial + HTTP",
+            "llm":       "openrouter/agent",
             "eval_llm":  EVAL_MODEL,
         },
-        max_concurrency=1,  # Secuencial para evitar rate limits en Groq/Cohere
+        max_concurrency=1,  # Secuencial para evitar Rate Limits
     )
 
-    print(f"\n✓ Evaluación completada.")
-    print(f"  Ver resultados en LangSmith: https://smith.langchain.com")
-
-
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
