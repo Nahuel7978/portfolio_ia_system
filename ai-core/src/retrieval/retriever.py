@@ -15,7 +15,7 @@ from langchain_classic.retrievers import ContextualCompressionRetriever
 from langchain_core.retrievers import BaseRetriever
 
 from langchain_cohere import CohereRerank
-from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from typing import List
 from langchain_core.documents import Document
@@ -46,29 +46,30 @@ DOC_TYPE_PRIORITY = [
 ]
 VALID_AREAS = {
     "ai", "ml", "robotics", "nlp", "web", "programming",
-    "computer vision", "data analytics", "education", "activity", "languages"
+    "computer vision", "data analytics", "education", "activity", "languages", "experience"
 }
 
-GROQ_MODEL      = "llama-3.3-70b-versatile"
+GPT_MODEL      = "meta-llama/llama-3.3-70b-instruct"
 COHERE_MODEL    = "rerank-multilingual-v3.0"  # Soporta español
                         
 #log.basicConfig(level=log.DEBUG)
 
 # ── LLM para MultiQueryRetriever ──────────────────────────────────────────────
 
-def _get_query_llm() -> ChatGroq:
+def _get_query_llm() -> ChatOpenAI:
     #LLM liviano usado SOLO para generar variaciones de la pregunta.
     #No es el LLM que responde al usuario final.
-    api_key = os.getenv("GROQ_API_KEY")
+    api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
         raise EnvironmentError(
-            "No se encontró GROQ_API_KEY en las variables de entorno.\n"
-            "Asegurate de tener un archivo .env con: GROQ_API_KEY=tu_key"
+            "No se encontró OPENROUTER_API_KEY en las variables de entorno.\n"
+            "Asegurate de tener un archivo .env con: OPENROUTER_API_KEY=tu_key"
         )
-    return ChatGroq(
-        model=GROQ_MODEL,
-        temperature=0,
+    return ChatOpenAI(
+        base_url="https://openrouter.ai/api/v1",
         api_key=api_key,
+        model=GPT_MODEL,
+        temperature=0,
     )
     
 def load_prompt(filename: str) -> str:
@@ -78,14 +79,14 @@ def load_prompt(filename: str) -> str:
     with open(prompt_path, "r", encoding="utf-8") as f:
         return f.read()
 
-def _extract_technology(query: str, llm: ChatGroq) -> str | None:
+def _extract_technology(query: str, llm: ChatOpenAI) -> str | None:
     raw_prompt = load_prompt("tech_prompt.txt")
     prompt = raw_prompt.format(query=query)
     response = llm.invoke([HumanMessage(content=prompt)])
     result = response.content.strip()
     return None if result == "NONE" else str.lower(result)
 
-def _extract_area(query: str, llm: ChatGroq) -> str | None:
+def _extract_area(query: str, llm: ChatOpenAI) -> str | None:
     areas_list = ", ".join(VALID_AREAS)
     raw_prompt = load_prompt("area_prompt.txt")
     prompt = raw_prompt.format(areas_list=areas_list, query=query)
@@ -269,7 +270,7 @@ def build_retriever() -> ContextualCompressionRetriever:
     load_dotenv()
     vector_store = load_vector_store()
     llm = _get_query_llm()
-    print("✓ LLM para query generation listo:", GROQ_MODEL)
+    print("✓ LLM para query generation listo:", GPT_MODEL)
 
     # Detectar si la pregunta menciona una tecnología específica
     # Se pasa el llm al DiversifiedRetriever para usarlo en el invoke
@@ -299,7 +300,7 @@ def build_retriever() -> ContextualCompressionRetriever:
 
 if __name__ == "__main__":
     retriever = build_retriever()
-    docs = retriever.invoke("¿Hizo algun trabajo relacionado la IA?")
+    docs = retriever.invoke("¿agente noticias veribot?")
     print(f"Total docs al LLM: {len(docs)}")
     for d in docs:
-        print(d.metadata.get("entry_name"), "|", d.metadata.get("doc_type"), "|", d.page_content[:120])
+        print(d.metadata.get("entry_name"), "|", d.metadata, "|", d.page_content[:120])
