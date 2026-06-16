@@ -1,8 +1,5 @@
 # Portfolio Agent and AI: A Hybrid Ecosystem of Showcase and RAG
 
-![Global System Architecture](https://drive.google.com/thumbnail?id=15Cy9HPN9fgD332ea88sdUrevI4qU5p27&sz=w1000)
-*Figure 1: Macro view of the Service-Oriented Architecture (SOA).*
-
 This project is a **hybrid web platform** designed from the ground up to function as a traditional Content Management System (CMS) and, simultaneously, as a highly specialized **Conversational Artificial Intelligence Agent (RAG)**.
 
 The main objective of this system is to demonstrate, in a practical and tangible way, my capabilities in Software Architecture, AI Automation, and Full-Stack Development, offering recruiters and clients an interactive way to learn about my profile.
@@ -18,6 +15,9 @@ To support the load of an Artificial Intelligence engine and a transactional CMS
 2. **The AI ​​Engine (AI Core):** Written in **Python with FastAPI and LangChain**. Completely decoupled from the relational world, it handles natural language processing, document chunking, and real-time chat interaction.
 
 3. **The Presentation Layer (Frontend):** Built in **Angular with Server-Side Rendering (SSR)**. It ensures that search engines index the blog's dynamic content, while delivering an ultra-smooth Single Page Application (SPA) experience.
+
+![Global System Architecture](https://drive.google.com/thumbnail?id=15Cy9HPN9fgD332ea88sdUrevI4qU5p27&sz=w1000)
+*Figure 1: Macro view of the Service-Oriented Architecture (SOA).*
 
 ## The Data Flow: Eventual Consistency and RAG
 
