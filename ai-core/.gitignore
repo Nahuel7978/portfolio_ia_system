@@ -210,4 +210,4 @@ __marimo__/
 data
 knowledge.db
 chroma_db
-./src/agent/prompts
+prompts
