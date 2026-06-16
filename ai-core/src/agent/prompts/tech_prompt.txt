@@ -1,0 +1,130 @@
+Tu tarea es detectar si la consulta del usuario menciona UNA tecnología específica.
+
+            DEFINICIÓN DE TECNOLOGÍA VÁLIDA:
+            Solo considera tecnologías de alguno de estos tipos:
+            - Lenguajes de programación
+            - Frameworks
+            - Librerías
+            - Herramientas de desarrollo
+            - Plataformas cloud
+            - Infraestructura
+            - Bases de datos
+            - APIs
+            - Algoritmos
+            - Modelos de IA/ML
+            - Protocolos
+            - Motores
+            - Tecnologías web
+
+            REGLAS:
+            1. Responde ÚNICAMENTE con:
+            - el nombre exacto de la tecnología en inglés
+            - o NONE
+            2. No agregues explicaciones, puntuación ni texto adicional.
+            3. Si aparecen múltiples tecnologías:
+                - responde la más relevante para la intención principal de la consulta
+                - si no existe una claramente principal, responde la primera tecnología explícitamente mencionada
+            4. Si la consulta es general y no menciona claramente una tecnología específica, responde: NONE
+            5. Usa inferencia semántica y reconoce variaciones de escritura.
+            6. La consulta puede venir en español, inglés o mezclando ambos idiomas.
+            7. La consulta puede venir en cualquier idioma.
+            8. Debes detectar tecnologías independientemente del idioma utilizado por el usuario.
+            9. La respuesta SIEMPRE debe estar normalizada al nombre oficial o más común de la tecnología en inglés.
+            10. Si la tecnología aparece traducida, transliterada o abreviada, conviértela a su nombre estándar en inglés.
+
+            IMPORTANTE:
+            NO consideres como tecnologías:
+            - empresas
+            - marcas
+            - universidades
+            - personas
+            - equipos
+            - productos genéricos
+            - áreas temáticas
+            - conceptos abstractos
+
+            Ejemplos que deben responder NONE:
+            - NVIDIA
+            - Google
+            - OpenAI
+            - Microsoft
+            - UNICEN
+            - NeuroAI Lab
+            - inteligencia artificial
+            - machine learning
+            - backend
+            - frontend
+
+            EXCEPCIÓN:
+            Si el nombre de una empresa o marca aparece como referencia explícita a una tecnología concreta, sí debes detectarla.
+
+            Ejemplos válidos:
+            - AWS
+            - Azure
+            - GPT-4
+            - TensorFlow
+            - PyTorch
+            - CUDA
+
+            MAPEO SEMÁNTICO Y NORMALIZACIÓN:
+            - reactjs → React
+            - react.js → React
+            - node → Node.js
+            - tf → TensorFlow
+            - js → JavaScript
+            - py → Python
+            - postgres → PostgreSQL
+            - pytorch lightning → PyTorch Lightning
+            - scikit learn → scikit-learn
+            - open cv → OpenCV
+            - docker compose → Docker Compose
+            - k8s → Kubernetes
+            - vue → Vue.js
+            - next → Next.js
+            - nest → NestJS
+
+            EJEMPLOS:
+
+            Pregunta: "¿Ha utilizado React en algún proyecto?"
+            Respuesta: React
+
+            Pregunta: "Dentro del proyecto Simulation Control App se utilizó el algoritmo DQN?"
+            Respuesta: DQN
+
+            Pregunta: "¿Tiene experiencia con FastAPI?"
+            Respuesta: FastAPI
+
+            Pregunta: "¿Qué aprendió en el workshop de Nvidia?"
+            Respuesta: NONE
+
+            Pregunta: "¿Trabajó con cloud computing?"
+            Respuesta: NONE
+
+            Pregunta: "¿Usó AWS para desplegar modelos?"
+            Respuesta: AWS
+
+            Pregunta: "Does he use TensorFlow or PyTorch?"
+            Respuesta: TensorFlow
+
+            Pregunta: "¿Tiene experiencia en backend?"
+            Respuesta: NONE
+
+            Pregunta: "Has he used redes neuronales convolucionales con TensorFlow?"
+            Respuesta: TensorFlow
+
+            Pregunta: "¿Trabajó con visión artificial usando OpenCV?"
+            Respuesta: OpenCV
+
+            Pregunta: "Utilizou Python em projetos de IA?"
+            Respuesta: Python
+
+            Pregunta: "A-t-il utilisé Docker pour le déploiement ?"
+            Respuesta: Docker
+
+            Pregunta: "Did he develop APIs with FastAPI?"
+            Respuesta: FastAPI
+
+            Pregunta del usuario:
+            {query}
+
+            Respuesta:
