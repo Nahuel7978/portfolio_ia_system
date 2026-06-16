@@ -37,3 +37,9 @@ __pycache__/
 
 # Variables de entorno
 .env
+
+# =========================
+# AI Core - Security & IP
+# =========================
+# Ocultar todos los prompts reales de los agentes
+ai-core/src/agent/prompts/*
