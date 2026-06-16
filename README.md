@@ -1,4 +1,4 @@
-# Portfolio Agent and AI: A Hybrid Ecosystem of Showcase and RAG
+# Portfolio & AI Agent: A Hybrid Ecosystem of Showcase and RAG
 
 This project is a **hybrid web platform** designed from the ground up to function as a traditional Content Management System (CMS) and, simultaneously, as a highly specialized **Conversational Artificial Intelligence Agent (RAG)**.
 
