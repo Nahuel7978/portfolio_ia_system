@@ -1,0 +1,44 @@
+<div class="chat-wrapper">
+  
+    <div class="chat-tooltip" *ngIf="showTooltip && !isOpen">
+      <span>Talk with me</span>
+      <button class="close-btn" (click)="closeTooltip($event)">&times;</button>
+      <div class="tooltip-arrow"></div>
+    </div>
+  
+    <button class="chat-trigger" (click)="toggleChat()" [ngClass]="{'is-open': isOpen}">
+      <img *ngIf="!isOpen" src="/bot.png" alt="Profile" class="profile-icon">
+      <span *ngIf="isOpen">&times;</span>
+    </button>
+  
+    <div class="chat-panel" [ngClass]="{'open': isOpen}">
+      <div class="chat-header">
+        <h4>CV BOT - Virtual Assistant</h4>
+      </div>
+      
+      <div class="chat-body" #scrollContainer>
+        <div *ngFor="let msg of messages$ | async" 
+             class="chat-message" 
+             [ngClass]="msg.sender === 'user' ? 'user-msg' : 'agent-msg'">
+          <div class="msg-bubble">
+            {{ msg.text }}
+          </div>
+        </div>
+        
+        <div class="chat-message agent-msg" *ngIf="isTyping">
+          <div class="msg-bubble typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+  
+      <div class="chat-footer">
+        <input type="text" 
+               [(ngModel)]="userInput" 
+               (keyup.enter)="sendMessage()" 
+               placeholder="Escribe tu mensaje..."
+               [disabled]="isTyping">
+        <button (click)="sendMessage()" [disabled]="!userInput.trim() || isTyping">➤</button>
+      </div>
+    </div>
+  </div>
