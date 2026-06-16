@@ -70,9 +70,6 @@ Network security is strict. The databases (`db-postgres` and `db-chroma`) **do n
 ---
 # Portfolio & AI Agent: Un Ecosistema Híbrido de Showcase y RAG
 
-![Global System Architecture](https://drive.google.com/thumbnail?id=15Cy9HPN9fgD332ea88sdUrevI4qU5p27&sz=w1000)
-*Figura 1: Vista macro de la Arquitectura Orientada a Servicios Ligeros (SOA).*
-
 Este proyecto  es una **plataforma web híbrida** diseñada desde cero para funcionar como un Gestor de Contenidos (CMS) tradicional y, al mismo tiempo, como un **Agente de Inteligencia Artificial Conversacional (RAG)** altamente especializado. 
 
 El objetivo principal de este sistema es demostrar, de forma práctica y tangible, mis capacidades en Arquitectura de Software, Automatización de IA y Desarrollo Full-Stack, ofreciendo a reclutadores y clientes una forma interactiva de conocer mi perfil.
@@ -86,6 +83,9 @@ Para soportar la carga de un motor de Inteligencia Artificial y un CMS transacci
 1. **El Núcleo Transaccional (Web Core):** Escrito en **Java con Spring Boot**. Actúa como la "Única Fuente de la Verdad" (Source of Truth). Gestiona la seguridad del panel administrativo, las operaciones CRUD del portafolio y el manejo físico de archivos binarios en base de datos.
 2. **El Motor de IA (AI Core):** Escrito en **Python con FastAPI y LangChain**. Totalmente desacoplado del mundo relacional, se encarga del procesamiento de lenguaje natural, el *chunking* de documentos y la interacción del chat en tiempo real.
 3. **La Capa de Presentación (Frontend):** Construida en **Angular con Server-Side Rendering (SSR)**. Garantiza que los motores de búsqueda indexen el contenido dinámico del blog, mientras ofrece una experiencia de Single Page Application (SPA) ultra fluida.
+
+![Global System Architecture](https://drive.google.com/thumbnail?id=15Cy9HPN9fgD332ea88sdUrevI4qU5p27&sz=w1000)
+*Figura 1: Vista macro de la Arquitectura Orientada a Servicios Ligeros (SOA).*
 
 ---
 
