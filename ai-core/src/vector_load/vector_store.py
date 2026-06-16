@@ -117,17 +117,17 @@ if __name__ == "__main__":
 
     # Test 1: ¿Están los chunks de esos proyectos en Chroma?
     results = vs.similarity_search(
-        query="proyectos web realizados",
+        query="Veribot is a",
         k=20,
-        filter={"area": "Web"}
+        filter={"area": "ai"}
     )
-    print(f"Con filtro area=Web: {len(results)} resultados")
+    print(f"Con filtro area=ai: {len(results)} resultados")
     for d in results:
         print(d.metadata.get("entry_name"), "|", d.page_content[:80])
 
     # Test 2: Sin filtro, ¿en qué posición aparecen?
     results_nf = vs.similarity_search(
-        query="proyectos web realizados",
+        query="VeriBot is a ",
         k=20,
     )
     print("\nSin filtro, Top-20:")
