@@ -1,3 +1,102 @@
+# AI Core - CV BOT: Vector Engine and Conversational Agent (RAG)
+This is a microservice responsible for managing a Conversational Artificial Intelligence Agent. Its purpose is not to generate generic text, but to act as a highly accurate representative of the technical profile, answering queries based *strictly* on the portfolio, experience, and published articles.
+
+To achieve fast, secure, and hallucination-free answers, this service implements an advanced **Recovery Augmented Generation (RAG)** system that is completely decoupled from traditional relational databases.
+
+
+![AI Core Architecture](https://drive.google.com/thumbnail?id=1tZu5agECbDPYaZ0egWUhsD69LsS2aiXK&sz=w900)
+
+*Figure 1: Internal architecture of the Artificial Intelligence microservice.*
+
+---
+
+## Technologies and Architectural Decisions
+
+The service is built in **Python 3.10+** using **FastAPI** for its high performance and native asynchronous support. The cognitive orchestrator is **LangChain**.
+
+**Key Decision**
+**ChromaDB runs independently as an HTTP server.** All filtering and semantic searching occurs directly in the vector space, eliminating the reliance on relational databases in the AI ​​layer.
+
+---
+
+## API and Security Contracts
+
+The microservice exposes two strictly separate communication channels to protect the LLM API consumption:
+
+### 1. Internal Route: Ingest Pipeline (Document ETL)
+When the administrator uploads a new project to the Web Core, the system sends the Markdown files to the AI ​​Core.
+
+* **Endpoint:** `POST /internal/documents/upsert`
+* **Security:** Protected by a symmetric key shared between containers (`X-Internal-Secret`). Not accessible from the internet.
+
+* **Process:** The API processes the file, applies chunking algorithms, dynamically injects category and technology metadata into each fragment, and stores them in ChromaDB.
+
+### 2. Public Channel: The Secured Chat Agent
+To prevent denial-of-service (DoS) attacks or automated abuse that exhausts the LLM quota, the public chat requires a two-step mechanism:
+* **Token Generation (`GET /api/auth/chat-token`):** Applies strict Rate Limiting per IP using **SlowAPI**. If the request is valid, it issues an **ephemeral JWT** containing a cryptographically embedded, unique `session_id`.
+
+* **Chat Streaming (`POST /api/chat`):** Validates the JWT and establishes a *Server-Sent Events (SSE)* connection with Angular, transmitting the AI ​​response token by token for a seamless experience.
+
+---
+
+## Intelligent Routing: The Router Agent
+
+Before a query reaches the vector search engine or the generative language model, it passes through a validation and classification layer known as the **Router Agent**.
+
+This component acts as a "traffic light" that analyzes the user's intent and classifies the query into three strict categories. This optimizes response times, reduces API costs, and protects the system:
+
+1. **Direct:** If the query is a greeting, a social interaction, or a question that can be answered without consulting information or searching documents, the router routes it directly to the response agent. The agent generates the message based solely on the information in its system prompt, avoiding the cost of a vector search.
+
+2. **Retrieval:** If the query requires specific knowledge about my background, experience, training, or projects, the router activates the retrieval pipeline in the knowledge base.
+
+3. **Block:** If the system detects malicious intent (prompt injection), queries about prohibited topics, policy violations, or any request outside the scope of my professional duties, the query is intercepted. The system aborts the call to the LLM and returns an automated response. The original message and the blocking action are recorded in the session history.
+
+---
+
+## The Advanced Retrieval Pipeline (Advanced RAG)
+
+When the Router Agent classifies a query as a **RAG**, our three-phase retrieval pipeline is activated. A **Retrieval combination** is used:
+
+1. **Base Retrieval:** A similarity search is performed.
+2. **Diversified Retrieval:**
+
+- _Extract Technology_: The query passes through an agent that determines if a specific technology was searched for and returns that technology.
+
+- _Extract Area_: The query passes through an agent that determines if a specific area was searched for and returns that area.
+
+- First, it is verified whether the query is about a specific technology, a specific area, or is a 'free' question.
+
+- If it contains a technology or area, a new vector search is performed, filtered by the metadata containing the detected technology or area.
+
+- To prevent a massive or highly detailed project from monopolizing all the search results, the algorithm groups the returned fragments and forces a diversified selection, ensuring that the LLM receives a rich context from multiple experiences.
+
+3. **Reranking:** The diversified fragments are re-evaluated and semantically reordered in relation to the original question, delivering to the LLM only the most accurate and context-rich fragments.
+
+---
+
+## Session Generation and Memory Management
+
+The Generator Agent receives the final fragments and drafts the response. To maintain a coherent conversation without saturating the LLM context window, an Internal Session Manager was developed:
+
+* The `session_id` injected into the user's JWT links their messages to the Python server's RAM.
+
+* Strict Limit: A maximum of 5 interactions (questions/answers) are retained per session.
+
+* Asynchronous Garbage Collector: A background task constantly sweeps memory, removing inactive or expired sessions, ensuring that the Docker container never suffers memory leaks.
+
+---
+
+## Continuous Quality Assessment (LangSmith)
+
+An AI agent in production must be tested and evaluated; for this reason, **LangSmith** was integrated into the `evals/` directory.
+
+Through these evaluation scripts and smoke tests, the model's latency, token consumption, and, most importantly, the deviation of responses to changes in the System Prompt are continuously monitored, ensuring that the agent always responds with the required professional tone and without any apparent issues.
+
+
+---
+# Spanish Version
+---
+
 # AI Core - CV BOT: Motor Vectorial y Agente Conversacional (RAG)
 
 Este es un microservicio encargado de manejar a un Agente de Inteligencia Artificial Conversacional. Su propósito no es generar texto genérico, sino actuar como un representante altamente preciso del perfil técnico, respondiendo consultas basándose *estrictamente* en el portafolio, experiencia y artículos publicados.
@@ -49,7 +148,7 @@ Este componente actúa como un "semáforo" que analiza la intención del usuario
 
 ---
 
-## 🕵️‍♂️ El Pipeline de Recuperación Avanzado (Advanced RAG)
+## El Pipeline de Recuperación Avanzado (Advanced RAG)
 
 Cuando el Agente Router clasifica una consulta como **RAG**, se activa nuestro pipeline de búsqueda en tres fases. Se utiliza una **Retrieval combination**:
 
@@ -60,7 +159,7 @@ Cuando el Agente Router clasifica una consulta como **RAG**, se activa nuestro p
   - Primero se verifica si la consulta es sobre una tecnología especifica, un área especifica o es una pregunta 'libre'.
   - Si contiene una tecnología o área se hace una nueva búsqueda vectorial filtrado por los métadatos que contengan la tecnología o área detectada.
   - Para evitar que un proyecto inmenso o muy detallado acapare todos los resultados de la búsqueda, el algoritmo agrupa los fragmentos devueltos y fuerza una selección diversificada, garantizando que el LLM reciba un contexto rico de múltiples experiencias.
-4. **Reranking:** Los fragmentos diversificados son reevaluados y reordenados semánticamente en relación con la pregunta original, entregando al LLM únicamente los fragmentos más precisos y ricos en contexto.
+3. **Reranking:** Los fragmentos diversificados son reevaluados y reordenados semánticamente en relación con la pregunta original, entregando al LLM únicamente los fragmentos más precisos y ricos en contexto.
 
 ---
 
