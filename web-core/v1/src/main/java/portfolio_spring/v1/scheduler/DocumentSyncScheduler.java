@@ -31,9 +31,11 @@ public class DocumentSyncScheduler {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    private final String fastApiUrl = "http://localhost:8001/CV_BOT_API/v1/internal/documents/upsert";
+    @Value("${FASTAPI_URL}")
+    private String fastApiUrl;
 
-    private final String internalSecret ="INTERNAL_INTERNAL"; 
+    @Value("${X_INTERNAL_SECRET}")
+    private String internalSecret; 
 
     public DocumentSyncScheduler(DocumentRepository documentRepository) {
         this.documentRepository = documentRepository;
