@@ -3,7 +3,7 @@ import { CommonModule, Location, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { KnowledgeEntryService } from '../../core/services/knowledge-entry';
 import { Title, Meta } from '@angular/platform-browser';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { MarkdownComponent } from 'ngx-markdown';
 import { LucideAngularModule, ArrowLeft, Code2, FileText } from 'lucide-angular';
 

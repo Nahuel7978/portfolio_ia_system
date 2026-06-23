@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AdminEntryService } from '../../../core/services/admin-entry.service';
 import { TechnologyService } from '../../../core/services/technology.service';
 import { concatMap, from, toArray, of } from 'rxjs';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-edit-entry',

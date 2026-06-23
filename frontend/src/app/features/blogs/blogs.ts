@@ -3,7 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { KnowledgeEntryService } from '../../core/services/knowledge-entry';
 import { KnowledgeEntryDTO } from '../../core/models/knowledge-entry.interface';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { LucideAngularModule, ChevronLeft, ChevronRight, FileText } from 'lucide-angular';
 
 @Component({

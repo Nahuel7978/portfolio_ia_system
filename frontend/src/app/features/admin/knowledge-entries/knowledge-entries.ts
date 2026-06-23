@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminEntryService } from '../../../core/services/admin-entry.service';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 import { Router, RouterLink } from  '@angular/router';
 import { TechnologiesComponent } from "../technology/technology";
 
