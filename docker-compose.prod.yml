@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    networks:
+      - app-network
+    # NO EXPORTAMOS PUERTOS (Protección contra escaneos)
+
+  chromadb:
+    image: chromadb/chroma:latest
+    restart: always
+    volumes:
+      - chroma_data_prod:/chroma/chroma
+    networks:
+      - app-network
+    # NO EXPORTAMOS PUERTOS
+
+  springboot:
+    build: ./web-core
+    restart: always
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - FASTAPI_URL=http://fastapi:8000/CV_BOT_API/v1/internal/documents/upsert
+      - X_INTERNAL_SECRET=${X_INTERNAL_SECRET}
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+
+  fastapi:
+    build: ./ai-core
+    restart: always
+    environment:
+      - CHROMA_URL=http://chromadb
+      - CHROMA_PORT=8000
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - COHERE_API_KEY=${COHERE_API_KEY}
+      - X_INTERNAL_SECRET=${X_INTERNAL_SECRET}
+    networks:
+      - app-network
+    depends_on:
+      - chromadb
+
+  angular:
+    build: ./frontend
+    restart: always
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - app-network
+    depends_on:
+      - springboot
+      - fastapi
+      - angular
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
+  chroma_data_prod:
