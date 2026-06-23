@@ -37,7 +37,7 @@ __pycache__/
 
 # Variables de entorno
 .env
-
+.env.prod
 # =========================
 # AI Core - Security & IP
 # =========================
