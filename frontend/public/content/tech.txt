@@ -2,4 +2,5 @@ Angular 18 & TypeScript
 Spring Boot & Java
 PostgreSQL & Redis
 FastAPI & Python
+LangChain & RAG
 Docker & CI/CD

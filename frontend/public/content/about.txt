@@ -1,3 +1,3 @@
-Passionate engineer with expertise in designing scalable systems and elegant software solutions. Focused on delivering high-quality, maintainable code that solves real-world problems.
+I am a Software Engineer with a strong track record in software development, cloud technologies, and complex problem-solving. I am proactive, possess strong team leadership skills, and am driven by a constant desire for continuous technical learning. My experience encompasses robust backend architecture design, clean Python code writing, relational database management, and Docker deployment for scalable environments. I have hands-on experience building full-stack applications, designing REST APIs, and integrating intelligent workflows into production environments.  
 
-With years of experience across full-stack development, cloud architecture, and system design, I bring a holistic approach to every project.
+I'm currently looking to collaborate on new projects. If you need help with your project or business, feel free to contact me to discuss it.
