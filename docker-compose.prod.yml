@@ -33,8 +33,9 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
-      - FASTAPI_URL=http://fastapi:8000/CV_BOT_API/v1/internal/documents/upsert
+      - FASTAPI_URL=${FASTAPI_URL}
       - X_INTERNAL_SECRET=${X_INTERNAL_SECRET}
+
     networks:
       - app-network
     depends_on:
@@ -44,10 +45,13 @@ services:
     build: ./ai-core
     restart: always
     environment:
-      - CHROMA_URL=http://chromadb
+      - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - GROQ_API_KEY=${GROQ_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - COHERE_API_KEY=${COHERE_API_KEY}
+      - HF_API_KEY=${HF_API_KEY}
       - X_INTERNAL_SECRET=${X_INTERNAL_SECRET}
     networks:
       - app-network
@@ -57,8 +61,12 @@ services:
   angular:
     build: ./frontend
     restart: always
+    environment:
+      - HOST=0.0.0.0
+      - PORT=4000
     networks:
       - app-network
+
 
   nginx:
     image: nginx:alpine
