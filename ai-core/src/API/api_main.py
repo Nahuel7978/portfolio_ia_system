@@ -62,7 +62,7 @@ def create_app() -> FastAPI:
     )
     
     # Routers
-    app.include_router(router.router, prefix="/CV_BOT_API/v1")
+    app.include_router(router.router)
 
     return app
 
