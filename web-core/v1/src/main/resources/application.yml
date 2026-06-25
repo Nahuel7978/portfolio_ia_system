@@ -1,7 +1,7 @@
 spring:
   app:
     jwt:
-      secret: ${JWT_SECRET:asdhiaowhdna2nq312430r9ujfñ23ññ9856}
+      secret: ${JWT_SECRET}
   datasource:
     url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB}
     username: ${POSTGRES_USER}
