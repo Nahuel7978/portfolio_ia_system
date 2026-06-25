@@ -1,7 +1,7 @@
 spring:
   app:
     jwt:
-      secret: ${JWT_SECRET:asdhiaowhdna2nq312430r9ujfñ23ññ9856}
+      secret: ${JWT_SECRET}
   datasource:
     url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB}
     username: ${POSTGRES_USER}
@@ -35,5 +35,5 @@ spring:
   # Configuración de Integración con AI Core
   ai-core:
     # Usamos el nombre del contenedor y el puerto interno (8000)
-    upsert-url: ${FASTAPI_URL:http://fastapi:8000/CV_BOT_API/v1/internal/documents/upsert}
-    internal-secret: ${X_INTERNAL_SECRET:INTERNAL_INTERNAL}
+    upsert-url: ${FASTAPI_URL}
+    internal-secret: ${X_INTERNAL_SECRET}
