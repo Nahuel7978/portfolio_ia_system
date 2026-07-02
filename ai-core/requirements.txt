@@ -27,3 +27,4 @@ uvicorn
 python-dotenv
 PyJWT
 slowapi
+langgraph
