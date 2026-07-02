@@ -10,36 +10,26 @@ Uso: uvicorn src.agent.api:app --reload
 """
 
 from fastapi import APIRouter, HTTPException, Header, Depends, File, UploadFile, Form, Request
-from src.API.security.security import create_chat_token, verify_chat_token, limiter
-from src.agent.Chain import build_cv_agent, _session_store
+from src.API.security.security import create_chat_token, verify_chat_token, limiter, purge_session_memory
+# IMPORTAMOS EL GRAFO Y LOS MENSAJES NATIVOS DE LANGCHAIN
+from src.agent.graph import cv_agent_app
+from langchain_core.messages import HumanMessage, RemoveMessage
+
 import json
 import os
 import asyncio
-from pydantic import BaseModel
+
 from pathlib import Path
 from src.pre_process.chunking import chunk_incoming_file
 from src.vector_load.vector_store import upsert_documents, delete_document_chunks
+
+from src.API.models.ChatRequest import ChatRequest
+ 
 from dotenv import load_dotenv
-from src.vector_load.vector_store import upsert_documents
-from src.API.models.DocumentUpsertRequest import DocumentUpsertRequest
-from src.agent.Chain import build_cv_agent, _session_store
 
 router = APIRouter()
 load_dotenv()
 vector_db_lock = asyncio.Lock()
-# Inicializar el agente una sola vez al levantar el servidor
-cv_agent = build_cv_agent()
-
-
-# ── Schemas ───────────────────────────────────────────────────────────────────
-
-class ChatRequest(BaseModel):
-    message: str
-
-class ChatResponse(BaseModel):
-    session_id: str
-    answer: str
-
 
 # --- Endpoint para generar token------
 @router.get("/auth/chat-token")
@@ -49,9 +39,6 @@ async def get_chat_token(request: Request):
     return {"access_token": token, "token_type": "bearer"}
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
-
-class ChatRequest(BaseModel):
-    message: str
 
 @router.post("/chat", response_model=dict)
 @limiter.limit("15/minute")
@@ -63,20 +50,33 @@ async def chat(
     if not payload.message.strip():
         raise HTTPException(status_code=400, detail="El mensaje no puede estar vacío.")
 
-    # BLOQUEO CRÍTICO: Si hay un Upsert/Delete en curso, el chat hace una pausa aquí
-    async with vector_db_lock:
-        # NOTA: Usamos ainvoke (Async Invoke) para que no bloquee el event loop de FastAPI
-        result = await cv_agent(query=payload.message, session_id=session_id)
+    # Configuramos el hilo de memoria nativo de LangGraph
+    config = {"configurable": {"thread_id": session_id}}
 
-    return {"answer": result["answer"]}
+    # BLOQUEO CRÍTICO: Si hay un Upsert/Delete en curso, el chat hace una pausa
+    async with vector_db_lock:
+        # Invocamos el Grafo de Estados de forma asíncrona
+        result = await cv_agent_app.ainvoke(
+            {"messages": [HumanMessage(content=payload.message)]}, 
+            config=config
+        )
+
+    # El resultado es el AgentState final. Extraemos el contenido del último mensaje.
+    final_answer = result["messages"][-1].content
+    return {"answer": final_answer}
+
 
 @router.delete("/session/{session_id}")
-async def clear_session(session_id: str) -> dict:
+async def clear_session(session_id: str):
     """
     Elimina el historial de una sesión específica.
     Útil cuando el usuario cierra el chat desde el frontend.
     """
-    return await cv_agent.clear_session(session_id)  # Limpia la memoria del agente para esa sesión
+    try:
+        removed_count = purge_session_memory(session_id, cv_agent_app)
+        return {"status": "success", "message": f"Se purgaron {removed_count} mensajes de la memoria RAM."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def verify_internal_secret(x_internal_secret: str = Header(...)):
@@ -138,4 +138,3 @@ async def delete_internal_document(document_id: int):
 async def health() -> dict:
     """Verificación de estado del servidor."""
     return {"status": "ok"}
-
