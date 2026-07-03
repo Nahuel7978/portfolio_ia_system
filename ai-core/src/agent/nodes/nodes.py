@@ -51,7 +51,7 @@ def generate_rag_node(state: AgentState):
     context_str = "\n\n".join([doc.page_content for doc in state.get("context", [])])
     
     # Se toman los ultimo HISTORY_K mensajes para mantener el contexto reciente.
-    recent_messages = state["messages"][-HISTORY_K:] if len(state["messages"]) > HISTORY_K else state["messages"]
+    recent_messages = state["messages"][-HISTORY_K:]
 
     # Inyectamos el contexto dinámicamente en el prompt del sistema
     formatted_prompt = agent_prompt.partial(context=context_str)
@@ -62,7 +62,7 @@ def generate_rag_node(state: AgentState):
 
 def generate_direct_node(state: AgentState):
     """Genera la respuesta directa para saludos/charlas casuales."""
-    recent_messages = state["messages"][-HISTORY_K:] if len(state["messages"]) > HISTORY_K else state["messages"]
+    recent_messages = state["messages"][-HISTORY_K:]
     # Para interacciones directas, el contexto está vacío
     formatted_prompt = agent_prompt.partial(context="")
     chain = formatted_prompt | llm
