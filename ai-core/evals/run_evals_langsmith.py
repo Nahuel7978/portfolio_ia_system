@@ -4,8 +4,8 @@ Ejecuta el benchmark del Agente CV contra el Golden Dataset en LangSmith.
 
 Flujo:
     1. Carga el dataset desde LangSmith por nombre
-    2. Invoca el agente CV por cada ejemplo
-    3. Evalúa con el evaluador LLM-as-a-Judge configurado en LangSmith (Claude)
+    2. Invoca el grafo LangGraph (cv_agent_app) por cada ejemplo
+    3. Evalúa con el evaluador LLM-as-a-Judge configurado en LangSmith
     4. Los resultados quedan visibles en la plataforma
 
 Uso: python evals/run_evals_langsmith.py
@@ -24,15 +24,17 @@ from langsmith.evaluation import EvaluationResult
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 
-from src.agent.Chain import build_cv_agent
+# Importamos el Grafo global en lugar del antiguo chain
+from src.agent.graph import cv_agent_app
 
 # ── Configuración ─────────────────────────────────────────────────────────────
 load_dotenv()
 
-DATASET_NAME      = "golden_dataset_cv_bot"
-EXPERIMENT_PREFIX = "cv-agent-sprint5-openrouter"
+DATASET_NAME      = "golden_ds_portfolio"
+EXPERIMENT_PREFIX = "cv-agent-sprint7-langgraph"
 
-EVAL_MODEL        = "openai/gpt-4o"
+# Usamos Llama 3.3 70B vía OpenRouter como juez evaluador
+EVAL_MODEL        = "meta-llama/llama-3.3-70b-instruct"
 
 # ── Configuración del Evaluador OpenRouter ────────────────────────────────────
 _eval_llm = ChatOpenAI(
@@ -42,25 +44,30 @@ _eval_llm = ChatOpenAI(
     temperature=0.0
 )
 
-# ── Agente (singleton) ────────────────────────────────────────────────────────
-print("── Inicializando agente CV ──")
-agent = build_cv_agent()
-
 # ── Función objetivo ──────────────────────────────────────────────────────────
 async def target(inputs: dict) -> dict:
     """
     Invocada por LangSmith por cada fila del dataset.
-    Retorna answer y contexts para que los evaluadores puedan usarlos.
+    Retorna answer y contexts extrayéndolos del AgentState de LangGraph.
     """
     question = inputs["question"]
-    # Generamos un ID de sesión simulado para aislar el contexto
+    # Generamos un ID de hilo simulado para aislar la memoria del Grafo
     session_id = "eval_" + str(os.urandom(4).hex())
+    config = {"configurable": {"thread_id": session_id}}
     
-    result = await agent(query=question, session_id=session_id)
+    # Invocamos el Grafo de LangGraph
+    result = await cv_agent_app.ainvoke(
+        {"messages": [HumanMessage(content=question)]}, 
+        config=config
+    )
+
+    # Extraemos la respuesta final y el contexto del estado
+    final_answer = result["messages"][-1].content
+    context_docs = result.get("context", [])
 
     return {
-        "answer": result["answer"],
-        "contexts": [doc.page_content for doc in result["context"]] if result["context"] else []
+        "answer": final_answer,
+        "contexts": [doc.page_content for doc in context_docs] if context_docs else []
     }
 
 # ── Evaluadores Personalizados (LLM-as-a-Judge) ───────────────────────────────
@@ -96,26 +103,16 @@ Never reward hallucinated facts not present in the reference output.
 Respond with valid JSON only, example: {{"score": 0.85, "comment": "Answer is accurate but slightly verbose."}}"""
 
 def llm_judge_evaluator(inputs: dict, outputs: dict, reference_outputs: dict) -> EvaluationResult:
-    """
-    Evaluador LLM-as-a-Judge usando Gemini.
-    Replica la lógica del evaluador configurado en la plataforma LangSmith.
-    """
     import json
-
     question  = inputs.get("question", "")
     answer    = outputs.get("answer", "")
     reference = reference_outputs.get("ground_truth", "")
 
-    prompt = JUDGE_PROMPT.format(
-        input=question,
-        output=answer,
-        reference=reference,
-    )
+    prompt = JUDGE_PROMPT.format(input=question, output=answer, reference=reference)
 
     try:
         response  = _eval_llm.invoke([HumanMessage(content=prompt)])
         raw       = response.content.strip()
-        # Limpiar posibles backticks de markdown
         raw       = raw.replace("```json", "").replace("```", "").strip()
         parsed    = json.loads(raw)
         score     = float(parsed.get("score", 0.0))
@@ -124,19 +121,10 @@ def llm_judge_evaluator(inputs: dict, outputs: dict, reference_outputs: dict) ->
         score   = 0.0
         comment = f"Error en evaluación: {e}"
 
-    return EvaluationResult(
-        key="llm_judge",
-        score=score,
-        comment=comment,
-    )
+    return EvaluationResult(key="llm_judge", score=score, comment=comment)
 
 def faithfulness_evaluator(inputs: dict, outputs: dict, reference_outputs: dict) -> EvaluationResult:
-    """
-    Evalúa si la respuesta está basada en los contextos recuperados.
-    Score 1.0 si no hay afirmaciones inventadas, 0.0 si hay alucinaciones claras.
-    """
     import json
-
     answer   = outputs.get("answer", "")
     contexts = outputs.get("contexts", [])
     context_text = "\n---\n".join(contexts) if contexts else "No context available."
@@ -168,12 +156,7 @@ def faithfulness_evaluator(inputs: dict, outputs: dict, reference_outputs: dict)
     return EvaluationResult(key="faithfulness", score=score, comment=comment)
 
 def context_recall_evaluator(inputs: dict, outputs: dict, reference_outputs: dict) -> EvaluationResult:
-    """
-    Evalúa si el contexto recuperado contiene la información necesaria
-    para responder la pregunta según el ground truth.
-    """
     import json
-
     question      = inputs.get("question", "")
     contexts      = outputs.get("contexts", [])
     reference     = reference_outputs.get("ground_truth", "")
@@ -207,7 +190,7 @@ def context_recall_evaluator(inputs: dict, outputs: dict, reference_outputs: dic
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 async def main():
-    print(f"\n══ CV Agent Benchmark - Integración Real ══")
+    print(f"\n══ CV Agent Benchmark - Integración LangGraph ══")
     print(f"   Dataset:    {DATASET_NAME}")
     print(f"   Evaluador:  {EVAL_MODEL}")
     print(f"   Experimento: {EXPERIMENT_PREFIX}\n")
@@ -222,12 +205,12 @@ async def main():
         ],
         experiment_prefix=EXPERIMENT_PREFIX,
         metadata={
-            "sprint":    "Sprint 5",
-            "retriever": "Vectorial + HTTP",
+            "sprint":    "Sprint 7",
+            "retriever": "LangGraph + Chroma HTTP",
             "llm":       "openrouter/agent",
             "eval_llm":  EVAL_MODEL,
         },
-        max_concurrency=1,  # Secuencial para evitar Rate Limits
+        max_concurrency=1,
     )
 
 if __name__ == "__main__":
