@@ -51,7 +51,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Origen de tu Frontend en Angular
-        configuration.setAllowedOrigins(Arrays.asList("http://173.249.28.153")); 
+        configuration.setAllowedOrigins(Arrays.asList("http://ingroman.site","http://www.ingroman.site"));
         // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         // Cabeceras permitidas (esencial para enviar el JSON y luego el JWT)

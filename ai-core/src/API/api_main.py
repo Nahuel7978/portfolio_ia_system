@@ -33,7 +33,7 @@ def create_app() -> FastAPI:
     
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://173.249.28.153"],
+        allow_origins=["http://ingroman.site", "http://www.ingroman.site"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
